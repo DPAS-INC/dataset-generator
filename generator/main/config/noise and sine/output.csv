@@ -1,0 +1,5 @@
+Outputs,Lab_Tensile,Lab_Tear,Lab_Fold,Lab_Stiffness,Lab_Burst,Lab_RingCrush,Lab_Brightness,Lab_Opacity
+Description,AREA_REEL,AREA_REEL,AREA_REEL,AREA_REEL,AREA_REEL,AREA_REEL,AREA_REEL,AREA_REEL
+Noise,2,0.5,1,0.05,1.2,2,1,1
+Max,100,100,100,100,100,100,100,100
+Min,50,50,50,50,50,50,50,50

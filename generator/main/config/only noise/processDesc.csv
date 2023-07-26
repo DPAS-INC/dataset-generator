@@ -1,0 +1,4 @@
+Description,AREA_HEADBOX,AREA_THICKSTOCK,AREA_THINSTOCK,AREA_REEL
+Deadtime Reel (min),0.5,20,15,0
+Lag 1 Reel (min),1,15,5,0
+Lag 2 Reel (min),0.5,5,5,0

@@ -1,0 +1,16 @@
+Google Guava external library:
+
+Licence: 'LICENCE.guava.txt'
+Source: https://github.com/google/guava
+
+Library: 'guava-31.1-jre.jar'
+Source: https://github.com/google/guava/releases
+
+Apache Commons CSV external library:
+
+Licence: 'LICENCE.commons.txt'
+Notice: 'NOTICE.commons.txt'
+Source: https://github.com/apache/commons-csv
+
+Library: commons-csv-1.10.0.jar
+Source: https://commons.apache.org/proper/commons-csv/download_csv.cgi
