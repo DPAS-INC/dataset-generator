@@ -8,4 +8,4 @@ The 'generator' directory holds the application and all external library license
 
 The 'documents' directory holds relevant information about the current dataset generator's variables and calculations.
 
-The application was developed in NetBeans, so a Netbeans version of the project is being worked on and will eventually be uploaded here to allow GUI configuration using the NetBeans editor.
+The 'NetBeans.zip' file is an older, modified version of the project which allows for GUI configuration using the NetBeans GUI editor. Details can be found in the 'Documentation.pdf' file.
