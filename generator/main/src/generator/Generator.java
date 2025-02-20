@@ -38,6 +38,8 @@ public class Generator {
    int qcsPeriod;
    // lastRow: The last row in the dataset
    int finalRow;
+   // 2/18/25 lastSteadyStateRow: The last row in the dataset
+   int lastSteadyStateRow;
    // numInputs: The number of input variables
    int numInputs;
    // numOutputs: The number of output variables
@@ -50,6 +52,8 @@ public class Generator {
    int coupledMoves;
    // uncoupledMoves: The number of uncoupled moves
    int uncoupledMoves;
+   // 2/18/25 isolatedMoves: The number of isolated moves
+   int isolatedMoves;
    // trim: The trim value
    double trim;
    // draw: The draw value
@@ -76,6 +80,8 @@ public class Generator {
       labPeriod = process.get("Lab").intValue();
       pulpeyePeriod = process.get("Pulpeye").intValue();
       uncoupledMoves = process.get("Uncoupled").intValue();
+	// 2/18/25 add isolated moves
+      isolatedMoves = 5; // process.get("Isolated").intValue();
       trim = process.get("Trim");
       draw = process.get("Draw");
       coupledMoves = process.get("Coupled").intValue();
@@ -246,6 +252,9 @@ public class Generator {
     * Determines the number of rows to represent each move, it needs to be the longer of the MV settling time or the lab sample period
     */
    public void createInputs(){
+
+	System.out.println("createInputs");
+
       double rowsPerMove = inputSettle / processPeriod;
       int rowsPerProcess = 1;
       int firstRow = 3;
@@ -270,7 +279,7 @@ public class Generator {
          }
          lastRow = row;
       }
-      int lastSteadyStateRow = lastRow;
+      lastSteadyStateRow = lastRow;
 
       // Uncoupled moves rows
       // Moves inputs uncoupled (independently)
@@ -329,7 +338,169 @@ public class Generator {
             lastMove = move;
          }
       }
+
+	System.out.println("createInputs row " + row + " lastRow " + lastRow );
       int lastInRow = lastRow;
+
+
+
+      // Set all inputs to average for settling time
+      for (int i = 2; i < lastInCol; i++) {
+         double min = Double.parseDouble(input.get(9, i));
+         double max = Double.parseDouble(input.get(8, i));
+         double avg = min + (max - min) / 2;
+         double noise = Double.parseDouble(input.get(6, i));
+         double sinePeriod = Double.parseDouble(input.get(10, i));
+         double amplitude = Double.parseDouble(input.get(11, i));
+
+	System.out.print("createInputs settle 1 input " + i + " avg " + avg + " lastRow " + lastRow);
+	System.out.println();
+
+	// 12/18/25 start at lastInRow
+         for (int j = 1; j <= (rowsPerMove / rowsPerProcess); j++) {
+            double noiseVal = calcNoise(noise);
+            row = lastRow - 1 + rowsPerProcess * j;
+            double sineVal = calcSine(sinePeriod, amplitude, row);
+            data.put(row, i, String.valueOf((avg + noiseVal + sineVal)));
+	System.out.println("createInputs settle 1 input " + i + " avg " + avg + " lastRow " + lastRow  + " row " + row + " data " + String.valueOf((avg + noiseVal + sineVal)) );
+         }
+//         lastRow = row;
+	System.out.print("createInputs settle 1 input " + i + " avg " + avg + " lastRow " + lastRow  + " row " + row);
+	System.out.println();
+      }
+      lastRow = row;
+      lastSteadyStateRow = lastRow;
+	System.out.println("createInputs settle 1 complete lastRow " + lastRow);
+
+      // Start isolated moves
+      // 3/3/24 Isolated moves rows
+      for (int i = 2; i < lastInCol; i++) 
+	{
+         double min = Double.parseDouble(input.get(9, i));
+         double max = Double.parseDouble(input.get(8, i));
+         double avg = min + (max - min) / 2;
+         int order = Integer.parseInt(input.get(12, i));
+         double sinePeriod = Double.parseDouble(input.get(10, i));
+         double amplitude = Double.parseDouble(input.get(11, i));
+         double stepSize;
+         double move;
+	double priorVal;
+	int moveInc;
+
+	// 2/18/25 Use isolated move count
+
+	System.out.print("createInputs isolated moves input " + i + " avg " + avg + " lastRow " + lastRow + " isolatedMoves " + isolatedMoves);
+	System.out.println();
+
+         if (isolatedMoves != 0)
+            stepSize = (max - min) / isolatedMoves;
+         else
+            stepSize = max - min;
+         double mvLag = Double.parseDouble(input.get(7, i));
+
+         double filter;
+         double mvFilter;
+         if (mvLag <= 0)
+            filter = 1;
+         else
+            filter = 0.63 / (mvLag / (rowsPerProcess * processPeriod));
+         if (filter > 1)
+            mvFilter = 1;
+         else
+            mvFilter = filter;
+
+	// Start from last uncoupled row
+         double noise = Double.parseDouble(input.get(6, i));
+         double lastMove = min;
+	// 2/18/25 Use isolatedMoves
+
+        for (int inputCount = 2; inputCount <= lastInCol; inputCount++) 
+	{
+         	for (int j = 0; j <= isolatedMoves; j++) 
+		{
+			if (order == inputCount) 
+                   		move = min + stepSize * j;
+                	else
+                  		move = avg;
+
+			System.out.flush();
+
+			moveInc = (int) Math.round(rowsPerMove / rowsPerProcess);
+			System.out.print("TEST ");
+			System.out.println("TEST LN ");
+			System.out.println("createInputs isolated moves rowsPerMove " + rowsPerMove);
+			System.out.println("createInputs isolated moves rowsPerProcess " + rowsPerProcess);
+			System.out.println("createInputs isolated moves moveInc " + moveInc);
+			System.out.println("createInputs isolated moves input " + i + " avg " + avg + " lastRow " + lastRow + " isolated move j " + j + " moveInc " + moveInc);
+
+           
+               		for (int x = 1; x <= moveInc; x++) 
+		  	{
+                  		row = lastRow + x + j * moveInc + (inputCount-2)*isolatedMoves*moveInc;
+
+System.out.println("createInputs isolated moves input " + i + " inputCount " + inputCount + " move " + move + " lastRow " + lastRow + " isolated move j " + j + " row x " + x + " row " + row);
+
+                  		double noiseVal = calcNoise(noise);
+//				System.out.println("createInputs isolated moves noiseVal ");
+                  		double sineVal = calcSine(sinePeriod, amplitude, row);
+//				System.out.println("createInputs isolated moves sineVal ");
+                  		priorVal = Double.parseDouble(data.get(246151, i));
+//				System.out.println("createInputs isolated moves priorVal-2 " + data.get(row-1, i));
+                  		priorVal = Double.parseDouble(data.get(row-1, i));
+//				System.out.println("createInputs isolated moves priorVal " + priorVal);
+                  		double newVal = priorVal * (1 - mvFilter) + move * mvFilter;
+//				System.out.println("createInputs isolated moves newVal " + newVal);
+                  		if (newVal < min)
+                     			newVal = min;
+                  		else if (newVal > max)
+                     			newVal = max;
+
+				System.out.println("createInputs isolated moves before data.put input " + i + " inputCount " + inputCount + " moveInc " + moveInc + " newVal " + newVal + " lastRow " + lastRow + " isolated move j " + j + " row x " + x + " row " + row);
+
+                  		data.put(row, i, String.valueOf((newVal + noiseVal + sineVal)));
+
+//				System.out.println("createInputs isolated moves input " + i + " newVal " + newVal + " lastRow " + lastRow + " isolated move j " + j + " row x " + x + " row " + row);
+               	  	}
+		}
+
+//		System.out.print("createInputs isolated moves after data.put input " + i + " lastRow " + lastRow + " row " + row);
+		System.out.println();
+
+	}
+//        	lastRow = row;
+      }
+	lastRow = row;
+      	lastInRow = lastRow;
+
+	// End of isolated moves
+
+      // Set all inputs to average for settling time
+      for (int i = 2; i < lastInCol; i++) {
+         double min = Double.parseDouble(input.get(9, i));
+         double max = Double.parseDouble(input.get(8, i));
+         double avg = min + (max - min) / 2;
+         double noise = Double.parseDouble(input.get(6, i));
+         double sinePeriod = Double.parseDouble(input.get(10, i));
+         double amplitude = Double.parseDouble(input.get(11, i));
+
+	System.out.print("createInputs settle 2 input " + i + " avg " + avg + "  lastRow " + lastRow);
+	System.out.println();
+
+	// 2/18/25 use lastInRow
+         for (int j = 1; j <= (rowsPerMove / rowsPerProcess); j++) {
+            double noiseVal = calcNoise(noise);
+            row = lastRow - 1 + rowsPerProcess * j;
+            double sineVal = calcSine(sinePeriod, amplitude, row);
+            data.put(row, i, String.valueOf((avg + noiseVal + sineVal)));
+         }
+
+	System.out.print("createInputs settle 2 input " + i + " avg " + avg + " lastRow " + lastRow + " row " + row);
+	System.out.println();
+      }
+         lastRow = row;
+      lastSteadyStateRow = lastRow;
+
+	System.out.println("createInputs settle 2 complete lastRow " + lastRow);
 
       // Validation move rows
       int firstValidationRow = 13;
@@ -345,7 +516,8 @@ public class Generator {
                validationValue = Double.parseDouble(data.get(lastInRow, j));
             else
                validationValue = Double.parseDouble(input.get(i, j));
-            for (dataRow = lastInRow + 1; dataRow <= (lastInRow + rowsPerMove); dataRow++) {
+		// 2/18/25 Use lastSteadyStateRow
+            for (dataRow = lastSteadyStateRow + 1; dataRow <= (lastSteadyStateRow + rowsPerMove); dataRow++) {
                double noiseVal = calcNoise(noise);
                double sineVal = calcSine(sinePeriod, amplitude, dataRow);
                data.put(dataRow, j, String.valueOf((validationValue + noiseVal + sineVal)));
@@ -398,6 +570,7 @@ public class Generator {
     * calcState: Method that applies specific calculations to some state variables
     */
    public void calcState(){
+	System.out.println("calcState");
       stateSetup(searchCol("MV_SWFreeness", state), searchCol("MV_SWSpecificEnergy", data), searchCol("MV_SWFreeness", data));
       stateSetup(searchCol("MV_HWFreeness", state), searchCol("MV_HWSpecificEnergy", data), searchCol("MV_HWFreeness", data));
       stateSetup(searchCol("MV_OCCFreeness", state), searchCol("MV_OCCSpecificEnergy", data), searchCol("MV_OCCFreeness", data));
@@ -512,6 +685,7 @@ public class Generator {
     * calcQCS: Method that calculates the QCS variable values
     */
    public void calcQCS(){
+	System.out.println("calcQCS");
       // The input variables not required for the remaining methods have been written to a CSV file, therefore those input columns were cleared
       for (int i = 2; i < firstVal; i++){
          for (int j = 3; j < finalRow + 1; j++){
@@ -530,6 +704,8 @@ public class Generator {
          double steamPressure;
          double machineSpeed;
          double blendFreeness;
+	// 3/3/24 was not declared
+	 String blendFreeness_str;
 
          if (i > dynRow) {
             dynamicValues(i, searchCol("MV_ThinStockFlow", input), true);
@@ -551,7 +727,16 @@ public class Generator {
             pressLoad = Double.parseDouble(data.get(i, searchCol("MV_PressLoad", data)));
             steamPressure = Double.parseDouble(data.get(i, searchCol("MV_SteamPressure", data)));
             machineSpeed = Double.parseDouble(data.get(i, searchCol("MV_MachineSpeed", data)));
-            blendFreeness = Double.parseDouble(data.get(i, searchCol("PulpEye_BlendFreeness", data)));
+		// 11/29/23 if freeness blank set to 0
+		blendFreeness_str =data.get(i, searchCol("PulpEye_BlendFreeness", data));
+		if (blendFreeness_str == "")	
+		{
+		blendFreeness = 0;
+		}	
+		else
+		{
+            	blendFreeness = Double.parseDouble(blendFreeness_str);
+		}
          }
 
          double boneDryWeight;
@@ -581,10 +766,14 @@ public class Generator {
     * calcLab: Method that calculates the output variables from the lab configurations
     */
    public void calcLab(){
+       System.out.println("Starting calcLab...");
       List<Integer> inputNames = new ArrayList<>();
       calcList(inputNames, numInputs, input);
+	System.out.println("calcLab Finished inputnames ...");
+
       List<Integer> stateNames = new ArrayList<>();
       calcList(stateNames, numState, state);
+	System.out.println("calcLab Finished statenames ...");
 
       int lastLab = lastInputCol + numOutputs;
       int firstLab = lastInputCol + 1;
