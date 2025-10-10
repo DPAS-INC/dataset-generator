@@ -11,7 +11,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
-// Generator class performs the dataset generation
+// Generator class performs the dataset generation 1
 public class Generator {
 
    // input: Data table for the input configurations
