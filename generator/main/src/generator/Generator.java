@@ -84,8 +84,8 @@ public class Generator {
       labPeriod = process.get("Lab").intValue();
       pulpeyePeriod = process.get("Pulpeye").intValue();
       uncoupledMoves = process.get("Uncoupled").intValue();
-      trim = process.get("Trim");
-      draw = process.get("Draw");
+      trim = 20;
+      draw = 1.1;
       coupledMoves = process.get("Coupled").intValue();
       numInputs = input.columnKeySet().size() - 1;
       numOutputs = labOutputs.keySet().size();
@@ -546,25 +546,40 @@ public class Generator {
    }
 
    /*
-    * calcQCS: Method that is translated and adapted from 'CalcQCS.bas' from the client's code (available on the Additional materials section on Moodle)
+    * calcStateDyn: Method that is translated and adapted from 'calcStateDyn.bas' from the client's code (available on the Additional materials section on Moodle)
     * The purpose of this method is to calculate the QCS variable values
     * Comments below signify important changes made by myself (redundant lines were removed by myself)
     */
-   public void calcQCS() {
-	    QCSCalculator qcs = new QCSCalculator(
+   public void calcStateDyn() {
+
+	   calcStateDyn qcs = new calcStateDyn(
+
 	        data,
+
 	        state,
+
 	        input,
+
 	        dyn,
+
 	        trim,
+
 	        draw,
+
 	        finalRow,
+
 	        lastInputCol,
+
 	        firstVal,
+
 	        dynRow,
+
 	        this::dynamicValues  
+
 	    );
-	    qcs.calcQCS();  
+
+	    qcs.calcStateDyn();  
+
 	}
 
    /*
@@ -875,4 +890,3 @@ public class Generator {
    }
 
 }
-
