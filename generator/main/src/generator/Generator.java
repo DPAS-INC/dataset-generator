@@ -550,87 +550,22 @@ public class Generator {
     * The purpose of this method is to calculate the QCS variable values
     * Comments below signify important changes made by myself (redundant lines were removed by myself)
     */
-   public void calcQCS(){
-      /*
-       * The input variables not required for the remaining methods have been written to a CSV file
-       * Therefore, the necessary input columns were cleared
-       * This was not required in VB as Excel could handle the large amount of data, unlike Java
-       */
-      for (int i = 2; i < firstVal; i++){
-         for (int j = 3; j < finalRow + 1; j++){
-            data.put(j, i, "");
-         }
-      }
-      // Caliper was searched instead of the column being hard-coded like in 'CalcQCS.bas' in the event that the user has a different column order
-      int col = searchCol("QCS_Caliper", state);
-      double caliperMax = Double.parseDouble(state.get(7,col));
-      double caliperSlope = 0.02;
-      double caliperNoise = Double.parseDouble(state.get(6,col));
-      for (int i = 3; i <= finalRow; i++){
-         double thinStockFlow;
-         double thinStockConsistency;
-         double pressLoad;
-         double steamPressure;
-         double machineSpeed;
-         double blendFreeness;
-         /*
-          * Since most of the code from 'DynamicInputs.bas' was not used, calcQCS() and calcLab() had to be adjusted since the methods used dynamic values
-          * The new technique was to call the temporary dynamicValues() on each input/state variable used in this method
-          * This was not required in VB as 'DynamicInputs.bas' was called creating an entire spreadsheet with these values which Java does not have the memory for
-          * Below, if dynamic values are required, the values are calculated using the 'dyn' dataset
-          */
-         if (i > dynRow) {
-            dynamicValues(i, searchCol("MV_ThinStockFlow", input), true);
-            dynamicValues(i, searchCol("MV_ThinStockConsistency", input), true);
-            dynamicValues(i, searchCol("MV_PressLoad", input), true);
-            dynamicValues(i, searchCol("MV_SteamPressure", input), true);
-            dynamicValues(i, searchCol("MV_MachineSpeed", state), false);
-            dynamicValues(i, searchCol("PulpEye_BlendFreeness", state), false);
-            thinStockFlow = Double.parseDouble(dyn.get(3, searchCol("MV_ThinStockFlow", dyn)));
-            thinStockConsistency = Double.parseDouble(dyn.get(3, searchCol("MV_ThinStockConsistency", dyn)));
-            pressLoad = Double.parseDouble(dyn.get(3, searchCol("MV_PressLoad", dyn)));
-            steamPressure = Double.parseDouble(dyn.get(3, searchCol("MV_SteamPressure", dyn)));
-            machineSpeed = Double.parseDouble(dyn.get(3, searchCol("MV_MachineSpeed", dyn)));
-            blendFreeness = Double.parseDouble(dyn.get(3, searchCol("PulpEye_BlendFreeness", dyn)));
-         }
-         else{
-            // Before the dynamic rows, the final dataset values can be used
-            thinStockFlow = Double.parseDouble(data.get(i, searchCol("MV_ThinStockFlow", data)));
-            thinStockConsistency = Double.parseDouble(data.get(i, searchCol("MV_ThinStockConsistency", data)));
-            pressLoad = Double.parseDouble(data.get(i, searchCol("MV_PressLoad", data)));
-            steamPressure = Double.parseDouble(data.get(i, searchCol("MV_SteamPressure", data)));
-            machineSpeed = Double.parseDouble(data.get(i, searchCol("MV_MachineSpeed", data)));
-            blendFreeness = Double.parseDouble(data.get(i, searchCol("PulpEye_BlendFreeness", data)));
-         }
-
-         double boneDryWeight;
-         double fiberToHeadbox = thinStockFlow * thinStockConsistency * 8.3 / 100;
-         double waterToHeadbox = thinStockFlow * 8.3 - fiberToHeadbox;
-         double wireDrainage = 5 + 90 * (1 - 1 / Math.exp(blendFreeness));
-         double waterToPress = waterToHeadbox * wireDrainage / 100;
-
-         double pressDrainage = 80 * (1 - 1 / Math.exp(pressLoad / 200));
-         double waterToDryers = waterToPress * pressDrainage / 100;
-         double moistureToDryers = waterToDryers / fiberToHeadbox;
-         double moistureAsymptote = 2.5 + machineSpeed / 500;
-
-         data.put(i, searchCol("QCS_Moisture", data), String.valueOf(moistureAsymptote + (moistureToDryers - moistureAsymptote) / Math.exp(steamPressure / 25)));
-         /*
-          * Client suggested to change the machineSpeed condition below to '10' from '0' to prevent accuracy errors
-          * However it was not generating accurate data, so I changed it to 1 which resolved the issue
-          */
-         if (machineSpeed <= 1)
-            boneDryWeight = 0;
-         else
-            boneDryWeight = fiberToHeadbox * 3300 / (machineSpeed * trim);
-         data.put(i, searchCol("QCS_BoneDryWeight", data), String.valueOf(boneDryWeight));
-         data.put(i, searchCol("QCS_BasisWeight", data), String.valueOf(boneDryWeight * (1 + Double.parseDouble(data.get(i, searchCol("QCS_Moisture", data))) / 100)));
-         double capMaxCalc = caliperMax * boneDryWeight / 50;
-         double capMinCalc = capMaxCalc / 2;
-         double noise = calcNoise(caliperNoise);
-         data.put(i, searchCol("QCS_Caliper", data), String.valueOf(capMinCalc + (capMaxCalc - capMinCalc) / Math.exp((pressLoad - 700) * caliperSlope) + noise));
-      }
-   }
+   public void calcQCS() {
+	    QCSCalculator qcs = new QCSCalculator(
+	        data,
+	        state,
+	        input,
+	        dyn,
+	        trim,
+	        draw,
+	        finalRow,
+	        lastInputCol,
+	        firstVal,
+	        dynRow,
+	        this::dynamicValues  
+	    );
+	    qcs.calcQCS();  
+	}
 
    /*
     * calcLab: Method that is translated and adapted from 'CalcLab.bas' from the client's code (available on the Additional materials section on Moodle)
@@ -940,3 +875,4 @@ public class Generator {
    }
 
 }
+
