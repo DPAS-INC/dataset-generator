@@ -2,7 +2,7 @@ package generator;
 
 import com.google.common.collect.Table;
 
-public class QCSCalculator {
+public class calcStateDyn {
 
     @FunctionalInterface
     public interface DynamicValueFunction {
@@ -21,7 +21,7 @@ public class QCSCalculator {
     private final int dynRow;
     private final DynamicValueFunction dynamicValues;
 
-    public QCSCalculator(
+    public calcStateDyn(
             Table<Integer, Integer, String> data,
             Table<Integer, Integer, String> state,
             Table<Integer, Integer, String> input,
@@ -58,8 +58,8 @@ public class QCSCalculator {
 		     return 2 * Math.random() * noise - noise;
 	}
 	  
-	public void calcQCS(){
-		System.out.println("calcQCS");
+	public void calcStateDyn(){
+		System.out.println("calcStateDyn");
 	      // The input variables not required for the remaining methods have been written to a CSV file, therefore those input columns were cleared
 	      for (int i = 2; i < firstVal; i++){
 	         for (int j = 3; j < finalRow + 1; j++){
