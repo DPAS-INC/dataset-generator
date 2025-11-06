@@ -771,7 +771,7 @@ public class Form extends javax.swing.JFrame {
 
       welcomeLabel.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
       welcomeLabel.setForeground(new java.awt.Color(0, 0, 0));
-      welcomeLabel.setText("Dataset Generator, Pat Dixon (Pulmac Systems), Alia Rezvi, 2023");
+      welcomeLabel.setText("<html>Dataset Generator, Pat Dixon, Alia Rezvi,<br>Mohammed Almakki, Grace Mower, Zaid Taiyab,<br>Deepak Dalai, (DPAS Inc), 2025</html>");
 
       loadButton.setBackground(new java.awt.Color(51, 153, 255));
       loadButton.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
