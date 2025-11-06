@@ -388,6 +388,11 @@ public class Form extends javax.swing.JFrame {
       loaded = false;
       valCount = 1;
       orderCount = 0;
+   // Hide Trim and Draw fields completely
+      trimLabel.setVisible(false);
+      trimField.setVisible(false);
+      drawLabel.setVisible(false);
+      drawField.setVisible(false);
    }
 
    /*
@@ -882,7 +887,7 @@ public class Form extends javax.swing.JFrame {
       qcsLabel.setBackground(new java.awt.Color(0, 0, 0));
       qcsLabel.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
       qcsLabel.setForeground(new java.awt.Color(0, 0, 0));
-      qcsLabel.setText("QCS Period (sec)");
+      qcsLabel.setText("Analyzer 1 Period");
 
       qcsField.setBackground(new java.awt.Color(255, 255, 255));
       qcsField.setForeground(new java.awt.Color(0, 0, 0));
@@ -898,7 +903,7 @@ public class Form extends javax.swing.JFrame {
       pulpLabel.setBackground(new java.awt.Color(0, 0, 0));
       pulpLabel.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
       pulpLabel.setForeground(new java.awt.Color(0, 0, 0));
-      pulpLabel.setText("PulpEye Period (sec)");
+      pulpLabel.setText("Analyzer 2 Period");
 
       pulpField.setBackground(new java.awt.Color(255, 255, 255));
       pulpField.setForeground(new java.awt.Color(0, 0, 0));
@@ -2586,7 +2591,6 @@ public class Form extends javax.swing.JFrame {
     * loadButtonActionPerformed: Method when clicking on the Select Folder button
     * Method shell (not body) was auto-generated from the GUI builder
     */
-   
    private void loadFolderButtonActionPerformed(java.awt.event.ActionEvent evt) {
 	    loadMessageLabel.setVisible(true);
 	    //  Choose folder
@@ -2841,30 +2845,29 @@ public class Form extends javax.swing.JFrame {
    private void submitProcessButtonActionPerformed() {
       // Prepaes variables to be validated
       String date = dateField.getText().trim();
-      String draw = drawField.getText().trim();
+      // String draw = drawField.getText().trim();
       String lab = labField.getText().trim();
       String processPeriod = processField.getText().trim();
       String pulp = pulpField.getText().trim();
       String qcs = qcsField.getText().trim();
-      String trim = trimField.getText().trim();
+      // String trim = trimField.getText().trim();
       String uc = ucField.getText().trim();
       String settle = settleField.getText().trim();
       processMessageLabel.setVisible(true);
 
       // Applies validation checks
-      if (date.isEmpty() || draw.isEmpty() || lab.isEmpty() || processPeriod.isEmpty() || pulp.isEmpty() || qcs.isEmpty() ||
-            trim.isEmpty() || uc.isEmpty()){
+      if (date.isEmpty() || lab.isEmpty() || processPeriod.isEmpty() || pulp.isEmpty() || qcs.isEmpty() ||
+             uc.isEmpty()){
          processMessageLabel.setText("Fields cannot be empty");
       }
       else if (Ints.tryParse(lab) == null || Ints.tryParse(processPeriod) == null || Ints.tryParse(pulp) == null
-            || Ints.tryParse(qcs) == null || Ints.tryParse(uc) == null || Ints.tryParse(settle) == null
-            || Doubles.tryParse(trim) == null || Doubles.tryParse(draw) == null)
+            || Ints.tryParse(qcs) == null || Ints.tryParse(uc) == null || Ints.tryParse(settle) == null)
          processMessageLabel.setText("Values fields must be a number, only trim and draw can be a decimal");
       else if (Integer.parseInt(qcs) % Integer.parseInt(processPeriod) != 0){
-         processMessageLabel.setText("QCS period is not a multiple of the Process period");
+         processMessageLabel.setText("Analyzer period is not a multiple of the Process period");
       }
       else if (Integer.parseInt(pulp) % Integer.parseInt(processPeriod) != 0){
-         processMessageLabel.setText("Pulpeye period is not a multiple of the Process period");
+         processMessageLabel.setText("Analyzer 2 Period is not a multiple of the Process period");
       }
       else if (Integer.parseInt(lab) % Integer.parseInt(processPeriod) != 0){
          processMessageLabel.setText("Lab period is not a multiple of the Process period");
@@ -2885,8 +2888,8 @@ public class Form extends javax.swing.JFrame {
          processVariables.put("Lab", Double.parseDouble(lab));
          processVariables.put("Pulpeye", Double.parseDouble(pulp));
          processVariables.put("Uncoupled", Double.parseDouble(uc));
-         processVariables.put("Trim", Double.parseDouble(trim));
-         processVariables.put("Draw", Double.parseDouble(draw));
+         //processVariables.put("Trim", Double.parseDouble(trim));
+         //processVariables.put("Draw", Double.parseDouble(draw));
          processVariables.put("Settle", Double.parseDouble(settle));
          processVariables.put("Coupled", (double) 0);
          processMessageLabel.setText("Values submitted");
@@ -3799,7 +3802,7 @@ public class Form extends javax.swing.JFrame {
                   gen.createInputs();
                   publish("Calculating state variables...");
                   gen.calcState();
-                  publish("Calculating QCS variables...");
+                  publish("Calculating calcStateDyn variables...");
                   gen.calcStateDyn();
                   publish("Calculating output lab variables...");
                   gen.calcLab();
@@ -3882,9 +3885,7 @@ public class Form extends javax.swing.JFrame {
     * downloadButtonActionPerformed: Method when clicking on the Select Folder button
     * Method shell (not body) was auto-generated from the GUI builder
     */
-   
-  
-      private void downloadFolderButtonActionPerformed() {
+   private void downloadFolderButtonActionPerformed() {
 	    try {
 	        // Open a folder chooser dialog
 	        JFileChooser folderChooser = new JFileChooser();
@@ -3913,11 +3914,6 @@ public class Form extends javax.swing.JFrame {
 	        e.printStackTrace();
 	    }
 	}
-
-   
-   
-
-
    // write: Method for writing to a CSV file given the data table and file name
    public void write(Table<Integer, Integer, String> table, String name){
       try {
@@ -3963,9 +3959,9 @@ public class Form extends javax.swing.JFrame {
          // Below data labels form part of the DG-11 requirement (from Appendix D - Requirements of the Project Report)
          process.put(1, 1, "Start Date");
          process.put(2, 1, "Process Period (sec)");
-         process.put(3, 1, "QCS Period (sec)");
+         process.put(3, 1, "Analyzer 1 Period");
          process.put(4, 1, "Lab Period (sec)");
-         process.put(5, 1, "PulpEye Period (sec)");
+         process.put(5, 1, "Analyzer 2 Period");
          process.put(6, 1, "Added Settle Time (sec)");
          process.put(7, 1, "Uncoupled Moves");
          process.put(8, 1, "Trim (ft)");
