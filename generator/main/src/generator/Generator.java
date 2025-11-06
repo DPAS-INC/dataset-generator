@@ -223,6 +223,11 @@ public class Generator {
       else
          t = data;
       try {
+         // Ensure the /data folder exists before writing
+        File dataFolder = new File("data");
+        if (!dataFolder.exists()) {
+            dataFolder.mkdirs();  // create the folder 
+        }
          BufferedWriter writer = new BufferedWriter(new FileWriter("data/" + name + ".csv"));
          /*
           * Below code was adapted from the question in this website: https://stackoverflow.com/questions/38524942/guava-table-to-csv
