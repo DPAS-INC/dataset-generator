@@ -3884,21 +3884,36 @@ public class Form extends javax.swing.JFrame {
     */
    
   
-   private void downloadFolderButtonActionPerformed() {
-      // Creates the folder that the user entered
-      try{
-         File file = new File("config/" + downloadField.getText());
-         if (!file.exists()){
-            file.mkdir();
-            download();
-         }
-         else
-            infoLabel.setText("Folder already exists in config");
-      }
-      catch (Exception e){
-         infoLabel.setText("Folder name is not in a correct format");
-      }
-   }
+      private void downloadFolderButtonActionPerformed() {
+	    try {
+	        // Open a folder chooser dialog
+	        JFileChooser folderChooser = new JFileChooser();
+	        folderChooser.setDialogTitle("Select Config Folder");
+	        folderChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+	        folderChooser.setAcceptAllFileFilterUsed(false);
+	        int result = folderChooser.showOpenDialog(this);
+	        if (result == JFileChooser.APPROVE_OPTION) {
+	            File selectedFolder = folderChooser.getSelectedFile();
+	            String folderName = selectedFolder.getName();
+	            // Update text field for consistency
+	            downloadField.setText(folderName);
+	            // Now check if it exists in config or create it
+	            File file = new File("config/" + folderName);
+	            if (!file.exists()) {
+	                file.mkdir();
+	                download();
+	            } else {
+	                infoLabel.setText("Folder already exists in config");
+	            }
+	        } else {
+	            infoLabel.setText("No folder selected");
+	        }
+	    } catch (Exception e) {
+	        infoLabel.setText("Error selecting folder: " + e.getMessage());
+	        e.printStackTrace();
+	    }
+	}
+
    
    
 
