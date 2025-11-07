@@ -1,6 +1,6 @@
 # dataset-generator
 
-Welcome to the Dataset Generator open-source project authored by Pat Dixon (Pulmac Systems) and Alia Rezvi.
+Welcome to the Dataset Generator open-source project authored by Pat Dixon, Alia Rezvi, Mohammed Almakki, Grace Mower, Zaid Taiyab, Deepak Dalai, (DPAS Inc), 2025.
 
 Please read the 'Documentation.pdf' file for an introduction and instructions on how to run/modify the application.
 
