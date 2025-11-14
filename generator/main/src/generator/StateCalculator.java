@@ -9,6 +9,10 @@ public class StateCalculator {
   private final double draw;
   private final int finalRow;
   private int lastInputCol;
+  
+  
+public static final int TRIM_AMOUNT = 20;
+public static final double DRAW_FACTOR = 1.1;
 
   public StateCalculator(Table<Integer, Integer, String> data,
                          Table<Integer, Integer, String> state,
