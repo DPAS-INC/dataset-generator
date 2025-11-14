@@ -84,8 +84,8 @@ public class Generator {
       labPeriod = process.get("Lab").intValue();
       pulpeyePeriod = process.get("Pulpeye").intValue();
       uncoupledMoves = process.get("Uncoupled").intValue();
-      trim = 20;
-      draw = 1.1;
+      trim = StateCalculator.TRIM_AMOUNT;
+	  draw = StateCalculator.DRAW_FACTOR;
       coupledMoves = process.get("Coupled").intValue();
       numInputs = input.columnKeySet().size() - 1;
       numOutputs = labOutputs.keySet().size();
