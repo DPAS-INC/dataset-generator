@@ -946,7 +946,7 @@ public class Form extends javax.swing.JFrame {
       formatLabel.setBackground(new java.awt.Color(0, 0, 0));
       formatLabel.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
       formatLabel.setForeground(new java.awt.Color(0, 0, 0));
-      formatLabel.setText("Format: mm/dd/yy");
+      formatLabel.setText("Format: m/d/yy or mm/dd/yy");
 
       processLabel.setBackground(new java.awt.Color(0, 0, 0));
       processLabel.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
@@ -3294,20 +3294,55 @@ public class Form extends javax.swing.JFrame {
       display(processConfig);
    }
 
-   // checkDate: Method that checks if a given date is in the correct format that
-   // the dataset would operate on
-   private boolean checkDate(String date) {
-      try {
-         // The following two lines of code was adapted from this tutorial:
-         // https://howtodoinjava.com/java/date-time/java-localdatetime-class/
-         // The pattern of "MM/dd/yy" was added by myself
-         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yy");
-         // The variable 'date' was changed from the original code
-         LocalDate.parse(date, formatter);
-         return true;
-      } catch (Exception e) {
-         return false;
+   // checkDate: Method that checks if a given date is in the correct format that the dataset would operate on
+   // More forgiving - accepts both single and double digit months and days (e.g., "1/1/24" or "01/01/24")
+   private boolean checkDate(String date){
+      // Try multiple date formats to be more forgiving
+      String[] patterns = {
+         "M/d/yy",      // Single digit month and day (e.g., "1/1/24")
+         "MM/d/yy",     // Two digit month, single digit day (e.g., "01/1/24")
+         "M/dd/yy",     // Single digit month, two digit day (e.g., "1/01/24")
+         "MM/dd/yy"     // Two digit month and day (e.g., "01/01/24")
+      };
+      
+      for (String pattern : patterns) {
+         try {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern(pattern);
+            LocalDate.parse(date, formatter);
+            return true;
+         }
+         catch (Exception e){
+            // Continue trying other patterns
+         }
       }
+      return false;
+   }
+
+   // normalizeDate: Method that normalizes a date string to MM/dd/yy format
+   // This ensures consistency when storing the date
+   private String normalizeDate(String date){
+      // Try multiple date formats to parse the input
+      String[] patterns = {
+         "M/d/yy",      // Single digit month and day (e.g., "1/1/24")
+         "MM/d/yy",     // Two digit month, single digit day (e.g., "01/1/24")
+         "M/dd/yy",     // Single digit month, two digit day (e.g., "1/01/24")
+         "MM/dd/yy"     // Two digit month and day (e.g., "01/01/24")
+      };
+      
+      for (String pattern : patterns) {
+         try {
+            DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern(pattern);
+            LocalDate parsedDate = LocalDate.parse(date, inputFormatter);
+            // Normalize to MM/dd/yy format
+            DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("MM/dd/yy");
+            return parsedDate.format(outputFormatter);
+         }
+         catch (Exception e){
+            // Continue trying other patterns
+         }
+      }
+      // If parsing fails, return original (shouldn't happen if checkDate passed)
+      return date;
    }
 
    /*
@@ -3348,7 +3383,8 @@ public class Form extends javax.swing.JFrame {
       } else {
          // Values are placed into the final HashMap
          processVariables.put("Process", (double) 0);
-         startDate = date;
+         // Normalize the date to MM/dd/yy format for consistency
+         startDate = normalizeDate(date);
          if (!processVariables.isEmpty() && !processVariables.get("Process").equals(process))
             processSet = false;
          processVariables.clear();
