@@ -101,7 +101,7 @@ public class Generator {
       pulpeyePeriod = process.get("Pulpeye").intValue();
       uncoupledMoves = process.get("Uncoupled").intValue();
       trim = StateCalculator.TRIM_AMOUNT;
-	    draw = StateCalculator.DRAW_FACTOR;
+	  draw = StateCalculator.DRAW_FACTOR;
       coupledMoves = process.get("Coupled").intValue();
       numInputs = input.columnKeySet().size() - 1;
       numOutputs = labOutputs.keySet().size();
@@ -580,12 +580,10 @@ public class Generator {
     * removed by myself)
     */
    public void calcState() {
+	    new StateCalculator(data, state, finalRow, lastInputCol)
+	            .calcState();
+	}
 
-      new StateCalculator(data, state, trim, draw, finalRow, lastInputCol)
-
-            .calcState();
-
-   }
 
    /*
     * dynamicValues: Method that is translated and adapted from 'SecondOrder.bas'
@@ -692,35 +690,21 @@ public class Generator {
     */
    public void calcStateDyn() {
 
-      calcStateDyn qcs = new calcStateDyn(
+	    calcStateDyn qcs = new calcStateDyn(
+	            data,
+	            state,
+	            input,
+	            dyn,
+	            finalRow,
+	            lastInputCol,
+	            firstVal,
+	            dynRow,
+	            this::dynamicValues
+	    );
 
-            data,
+	    qcs.calcStateDyn();
+	}
 
-            state,
-
-            input,
-
-            dyn,
-
-            trim,
-
-            draw,
-
-            finalRow,
-
-            lastInputCol,
-
-            firstVal,
-
-            dynRow,
-
-            this::dynamicValues
-
-      );
-
-      qcs.calcStateDyn();
-
-   }
 
    /*
     * calcLab: Method that is translated and adapted from 'CalcLab.bas' from the
