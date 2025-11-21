@@ -13,21 +13,19 @@ public class calcStateDyn {
     private final Table<Integer, Integer, String> state;
     private final Table<Integer, Integer, String> input;
     private final Table<Integer, Integer, String> dyn;
-    private final double trim;
-    private final double draw;
     private final int finalRow;
     private final int lastInputCol;
     private final int firstVal;
     private final int dynRow;
     private final DynamicValueFunction dynamicValues;
+    
+    public static final int TRIM_AMOUNT = 20;
 
     public calcStateDyn(
             Table<Integer, Integer, String> data,
             Table<Integer, Integer, String> state,
             Table<Integer, Integer, String> input,
             Table<Integer, Integer, String> dyn,
-            double trim,
-            double draw,
             int finalRow,
             int lastInputCol,
             int firstVal,
@@ -37,8 +35,6 @@ public class calcStateDyn {
         this.state = state;
         this.input = input;
         this.dyn = dyn;
-        this.trim = trim;
-        this.draw = draw;
         this.finalRow = finalRow;
         this.lastInputCol = lastInputCol;
         this.firstVal = firstVal;
@@ -126,7 +122,7 @@ public class calcStateDyn {
 	         if (machineSpeed <= 1)
 	            boneDryWeight = 0;
 	         else
-	            boneDryWeight = fiberToHeadbox * 3300 / (machineSpeed * trim);
+	            boneDryWeight = fiberToHeadbox * 3300 / (machineSpeed * TRIM_AMOUNT);
 	         data.put(i, searchCol("QCS_BoneDryWeight", data), String.valueOf(boneDryWeight));
 	         data.put(i, searchCol("QCS_BasisWeight", data), String.valueOf(boneDryWeight * (1 + Double.parseDouble(data.get(i, searchCol("QCS_Moisture", data))) / 100)));
 	         double capMaxCalc = caliperMax * boneDryWeight / 50;
