@@ -234,7 +234,8 @@ public class Form extends javax.swing.JFrame {
    private javax.swing.JLabel valTitleLabel;
    private javax.swing.JComboBox<String> varBox;
    private javax.swing.JLabel welcomeLabel;
-
+   private javax.swing.JTextField labOffsetField;
+   private javax.swing.JLabel labOffsetLabel;
    // Following fields were created by myself manually
 
    // processVariables: the values entered on the Process Configuration page
@@ -610,6 +611,8 @@ public class Form extends javax.swing.JFrame {
       downloadField = new javax.swing.JTextField();
       downloadLabel = new javax.swing.JLabel();
       downloadFolderButton = new javax.swing.JButton();
+      labOffsetField = new javax.swing.JTextField();
+      labOffsetLabel = new javax.swing.JLabel();
 
       setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
       setBackground(new java.awt.Color(255, 255, 255));
@@ -971,6 +974,14 @@ public class Form extends javax.swing.JFrame {
 
       labField.setBackground(new java.awt.Color(255, 255, 255));
       labField.setForeground(new java.awt.Color(0, 0, 0));
+      
+      labOffsetLabel.setBackground(new java.awt.Color(0, 0, 0));
+      labOffsetLabel.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
+      labOffsetLabel.setForeground(new java.awt.Color(0, 0, 0));
+      labOffsetLabel.setText("Lab Offset (sec)");
+
+      labOffsetField.setBackground(new java.awt.Color(255, 255, 255));
+      labOffsetField.setForeground(new java.awt.Color(0, 0, 0));
 
       pulpLabel.setBackground(new java.awt.Color(0, 0, 0));
       pulpLabel.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
@@ -1037,131 +1048,137 @@ public class Form extends javax.swing.JFrame {
       javax.swing.GroupLayout processConfigLayout = new javax.swing.GroupLayout(processConfig);
       processConfig.setLayout(processConfigLayout);
       processConfigLayout.setHorizontalGroup(
-            processConfigLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                  .addGroup(processConfigLayout.createSequentialGroup()
-                        .addGroup(processConfigLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                              .addGroup(processConfigLayout.createSequentialGroup()
-                                    .addGap(278, 278, 278)
-                                    .addGroup(processConfigLayout
-                                          .createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                          .addGroup(processConfigLayout.createSequentialGroup()
-                                                .addComponent(dateField, javax.swing.GroupLayout.PREFERRED_SIZE, 91,
-                                                      javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(formatLabel))
-                                          .addComponent(dateLabel)
-                                          .addComponent(labLabel)
-                                          .addComponent(labField, javax.swing.GroupLayout.PREFERRED_SIZE, 91,
-                                                javax.swing.GroupLayout.PREFERRED_SIZE)
-                                          .addComponent(processLabel)
-                                          .addComponent(processField, javax.swing.GroupLayout.PREFERRED_SIZE, 91,
-                                                javax.swing.GroupLayout.PREFERRED_SIZE)
-                                          .addComponent(qcsLabel)
-                                          .addComponent(qcsField, javax.swing.GroupLayout.PREFERRED_SIZE, 91,
-                                                javax.swing.GroupLayout.PREFERRED_SIZE))
-                                    .addGap(35, 35, 35)
-                                    .addGroup(processConfigLayout
-                                          .createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                          .addComponent(ucLabel)
-                                          .addComponent(ucField, javax.swing.GroupLayout.PREFERRED_SIZE, 91,
-                                                javax.swing.GroupLayout.PREFERRED_SIZE)
-                                          .addComponent(isolatedLabel)
-                                          .addComponent(isolatedField, javax.swing.GroupLayout.PREFERRED_SIZE, 91,
-                                                javax.swing.GroupLayout.PREFERRED_SIZE)
-                                          .addComponent(pulpField, javax.swing.GroupLayout.PREFERRED_SIZE, 91,
-                                                javax.swing.GroupLayout.PREFERRED_SIZE)
-                                          .addComponent(pulpLabel))
-                                    .addGap(35, 35, 35)
-                                    .addGroup(processConfigLayout
-                                          .createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                          .addComponent(trimLabel)
-                                          .addComponent(trimField, javax.swing.GroupLayout.PREFERRED_SIZE, 91,
-                                                javax.swing.GroupLayout.PREFERRED_SIZE)
-                                          .addComponent(drawLabel)
-                                          .addComponent(drawField, javax.swing.GroupLayout.PREFERRED_SIZE, 91,
-                                                javax.swing.GroupLayout.PREFERRED_SIZE)))
-                              .addGroup(processConfigLayout.createSequentialGroup()
-                                    .addGap(358, 358, 358)
-                                    .addComponent(processTitleLabel))
-                              .addGroup(processConfigLayout.createSequentialGroup()
-                                    .addGap(407, 407, 407)
-                                    .addGroup(processConfigLayout
-                                          .createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                          .addComponent(settleField, javax.swing.GroupLayout.PREFERRED_SIZE, 91,
-                                                javax.swing.GroupLayout.PREFERRED_SIZE)
-                                          .addComponent(settleLabel)))
-                              .addGroup(processConfigLayout.createSequentialGroup()
-                                    .addGap(399, 399, 399)
-                                    .addComponent(submitProcessButton, javax.swing.GroupLayout.PREFERRED_SIZE, 107,
-                                          javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addGap(18, 18, 18)
-                                    .addComponent(processMessageLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 410,
-                                          javax.swing.GroupLayout.PREFERRED_SIZE)))
-                        .addContainerGap(33, Short.MAX_VALUE)));
-      processConfigLayout.setVerticalGroup(
-            processConfigLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                  .addGroup(processConfigLayout.createSequentialGroup()
-                        .addContainerGap()
-                        .addComponent(processTitleLabel)
-                        .addGap(75, 75, 75)
-                        .addGroup(processConfigLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                              .addComponent(dateLabel, javax.swing.GroupLayout.Alignment.TRAILING)
-                              .addComponent(pulpLabel))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(processConfigLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                              .addComponent(dateField, javax.swing.GroupLayout.PREFERRED_SIZE,
-                                    javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                              .addComponent(formatLabel)
-                              .addComponent(pulpField, javax.swing.GroupLayout.PREFERRED_SIZE,
-                                    javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addGroup(processConfigLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                              .addComponent(ucLabel)
-                              .addComponent(trimLabel)
-                              .addComponent(processLabel))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(processConfigLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                              .addComponent(ucField, javax.swing.GroupLayout.PREFERRED_SIZE,
-                                    javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                              .addComponent(trimField, javax.swing.GroupLayout.PREFERRED_SIZE,
-                                    javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                              .addComponent(processField, javax.swing.GroupLayout.PREFERRED_SIZE,
-                                    javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addGroup(processConfigLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                              .addComponent(isolatedLabel)
-                              .addComponent(drawLabel)
-                              .addComponent(qcsLabel))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(processConfigLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                              .addComponent(isolatedField, javax.swing.GroupLayout.PREFERRED_SIZE,
-                                    javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                              .addComponent(drawField, javax.swing.GroupLayout.PREFERRED_SIZE,
-                                    javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                              .addComponent(qcsField, javax.swing.GroupLayout.PREFERRED_SIZE,
-                                    javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addGroup(processConfigLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                              .addComponent(pulpLabel)
-                              .addComponent(labLabel))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(processConfigLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                              .addComponent(pulpField, javax.swing.GroupLayout.PREFERRED_SIZE,
-                                    javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                              .addComponent(labField, javax.swing.GroupLayout.PREFERRED_SIZE,
-                                    javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(settleLabel)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(settleField, javax.swing.GroupLayout.PREFERRED_SIZE,
-                              javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 37, Short.MAX_VALUE)
-                        .addGroup(processConfigLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                              .addComponent(submitProcessButton, javax.swing.GroupLayout.PREFERRED_SIZE, 39,
-                                    javax.swing.GroupLayout.PREFERRED_SIZE)
-                              .addComponent(processMessageLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 39,
-                                    javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(211, 211, 211)));
+              processConfigLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(processConfigLayout.createSequentialGroup()
+                          .addGroup(processConfigLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                .addGroup(processConfigLayout.createSequentialGroup()
+                                      .addGap(278, 278, 278)
+                                      .addGroup(processConfigLayout
+                                            .createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                            .addGroup(processConfigLayout.createSequentialGroup()
+                                                  .addComponent(dateField, javax.swing.GroupLayout.PREFERRED_SIZE, 91,
+                                                        javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                  .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                  .addComponent(formatLabel))
+                                            .addComponent(dateLabel)
+                                            .addComponent(labLabel)
+                                            .addComponent(labField, javax.swing.GroupLayout.PREFERRED_SIZE, 91,
+                                                  javax.swing.GroupLayout.PREFERRED_SIZE)
+                                            .addComponent(processLabel)
+                                            .addComponent(processField, javax.swing.GroupLayout.PREFERRED_SIZE, 91,
+                                                  javax.swing.GroupLayout.PREFERRED_SIZE)
+                                            .addComponent(qcsLabel)
+                                            .addComponent(qcsField, javax.swing.GroupLayout.PREFERRED_SIZE, 91,
+                                                  javax.swing.GroupLayout.PREFERRED_SIZE))
+                                      .addGap(35, 35, 35)
+                                      .addGroup(processConfigLayout
+                                            .createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                            .addComponent(ucLabel)
+                                            .addComponent(ucField, javax.swing.GroupLayout.PREFERRED_SIZE, 91,
+                                                  javax.swing.GroupLayout.PREFERRED_SIZE)
+                                            .addComponent(isolatedLabel)
+                                            .addComponent(isolatedField, javax.swing.GroupLayout.PREFERRED_SIZE, 91,
+                                                  javax.swing.GroupLayout.PREFERRED_SIZE)
+                                            .addComponent(pulpField, javax.swing.GroupLayout.PREFERRED_SIZE, 91,
+                                                    javax.swing.GroupLayout.PREFERRED_SIZE)
+                                              .addComponent(pulpLabel)
+                                              .addComponent(labOffsetLabel)
+                                              .addComponent(labOffsetField, javax.swing.GroupLayout.PREFERRED_SIZE, 91,
+                                                    javax.swing.GroupLayout.PREFERRED_SIZE))
+                                      .addGap(35, 35, 35)
+                                      .addGroup(processConfigLayout
+                                            .createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                            .addComponent(trimLabel)
+                                            .addComponent(trimField, javax.swing.GroupLayout.PREFERRED_SIZE, 91,
+                                                  javax.swing.GroupLayout.PREFERRED_SIZE)
+                                            .addComponent(drawLabel)
+                                            .addComponent(drawField, javax.swing.GroupLayout.PREFERRED_SIZE, 91,
+                                                  javax.swing.GroupLayout.PREFERRED_SIZE)))
+                                .addGroup(processConfigLayout.createSequentialGroup()
+                                      .addGap(358, 358, 358)
+                                      .addComponent(processTitleLabel))
+                                .addGroup(processConfigLayout.createSequentialGroup()
+                                      .addGap(407, 407, 407)
+                                      .addGroup(processConfigLayout
+                                            .createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                            .addComponent(settleField, javax.swing.GroupLayout.PREFERRED_SIZE, 91,
+                                                  javax.swing.GroupLayout.PREFERRED_SIZE)
+                                            .addComponent(settleLabel)))
+                                .addGroup(processConfigLayout.createSequentialGroup()
+                                      .addGap(399, 399, 399)
+                                      .addComponent(submitProcessButton, javax.swing.GroupLayout.PREFERRED_SIZE, 107,
+                                            javax.swing.GroupLayout.PREFERRED_SIZE)
+                                      .addGap(18, 18, 18)
+                                      .addComponent(processMessageLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 410,
+                                            javax.swing.GroupLayout.PREFERRED_SIZE)))
+                          .addContainerGap(33, Short.MAX_VALUE)));
+        processConfigLayout.setVerticalGroup(
+              processConfigLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(processConfigLayout.createSequentialGroup()
+                          .addContainerGap()
+                          .addComponent(processTitleLabel)
+                          .addGap(75, 75, 75)
+                          .addGroup(processConfigLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                .addComponent(dateLabel, javax.swing.GroupLayout.Alignment.TRAILING)
+                                .addComponent(pulpLabel))
+                          .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                          .addGroup(processConfigLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                .addComponent(dateField, javax.swing.GroupLayout.PREFERRED_SIZE,
+                                      javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addComponent(formatLabel)
+                                .addComponent(pulpField, javax.swing.GroupLayout.PREFERRED_SIZE,
+                                      javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                          .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                          .addGroup(processConfigLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                .addComponent(ucLabel)
+                                .addComponent(trimLabel)
+                                .addComponent(processLabel))
+                          .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                          .addGroup(processConfigLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                .addComponent(ucField, javax.swing.GroupLayout.PREFERRED_SIZE,
+                                      javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addComponent(trimField, javax.swing.GroupLayout.PREFERRED_SIZE,
+                                      javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addComponent(processField, javax.swing.GroupLayout.PREFERRED_SIZE,
+                                      javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                          .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                          .addGroup(processConfigLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                .addComponent(isolatedLabel)
+                                .addComponent(drawLabel)
+                                .addComponent(qcsLabel))
+                          .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                          .addGroup(processConfigLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                .addComponent(isolatedField, javax.swing.GroupLayout.PREFERRED_SIZE,
+                                      javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addComponent(drawField, javax.swing.GroupLayout.PREFERRED_SIZE,
+                                      javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addComponent(qcsField, javax.swing.GroupLayout.PREFERRED_SIZE,
+                                      javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                          .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                          .addGroup(processConfigLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                  .addComponent(pulpLabel)
+                                  .addComponent(labLabel)
+                                  .addComponent(labOffsetLabel))
+                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                            .addGroup(processConfigLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                  .addComponent(pulpField, javax.swing.GroupLayout.PREFERRED_SIZE,
+                                        javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                  .addComponent(labField, javax.swing.GroupLayout.PREFERRED_SIZE,
+                                        javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                  .addComponent(labOffsetField, javax.swing.GroupLayout.PREFERRED_SIZE,
+                                        javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                          .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                          .addComponent(settleLabel)
+                          .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                          .addComponent(settleField, javax.swing.GroupLayout.PREFERRED_SIZE,
+                                javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                          .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 37, Short.MAX_VALUE)
+                          .addGroup(processConfigLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                .addComponent(submitProcessButton, javax.swing.GroupLayout.PREFERRED_SIZE, 39,
+                                      javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addComponent(processMessageLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 39,
+                                      javax.swing.GroupLayout.PREFERRED_SIZE))
+                          .addGap(211, 211, 211)));
 
       main.add(processConfig, "card2");
 
@@ -3126,6 +3143,12 @@ public class Form extends javax.swing.JFrame {
          isolatedField.setText(String.valueOf((int) Double.parseDouble(tempProcess.get(8, 2))));
          trimField.setText(tempProcess.get(9, 2));
          drawField.setText(tempProcess.get(10, 2));
+         if (tempProcess.get(11, 2) != null) {
+             labOffsetField.setText(String.valueOf((int) Double.parseDouble(tempProcess.get(11, 2))));
+          } else {
+             labOffsetField.setText("0");
+          }
+
 
          // Data is placed into UI tables and dropdown boxes
          for (int i = 2; i <= tempDesc.columnKeySet().size(); i++) {
@@ -3362,14 +3385,15 @@ public class Form extends javax.swing.JFrame {
       String uc = ucField.getText().trim();
       String isolated = isolatedField.getText().trim();
       String settle = settleField.getText().trim();
+      String labOffset = labOffsetField.getText().trim();
       processMessageLabel.setVisible(true);
 
       // Applies validation checks
       if (date.isEmpty() || lab.isEmpty() || processPeriod.isEmpty() || pulp.isEmpty() || qcs.isEmpty() ||
-            uc.isEmpty() || isolated.isEmpty()) {
+            uc.isEmpty() || labOffset.isEmpty() || isolated.isEmpty()) {
          processMessageLabel.setText("Fields cannot be empty");
       } else if (Ints.tryParse(lab) == null || Ints.tryParse(processPeriod) == null || Ints.tryParse(pulp) == null
-            || Ints.tryParse(qcs) == null || Ints.tryParse(uc) == null || Ints.tryParse(isolated) == null
+            || Ints.tryParse(qcs) == null || Ints.tryParse(uc) == null || Ints.tryParse(labOffset) == null || Ints.tryParse(isolated) == null
             || Ints.tryParse(settle) == null)
          processMessageLabel.setText("Values fields must be a number, only trim and draw can be a decimal");
       else if (Integer.parseInt(qcs) % Integer.parseInt(processPeriod) != 0) {
@@ -3399,6 +3423,7 @@ public class Form extends javax.swing.JFrame {
          // processVariables.put("Trim", Double.parseDouble(trim));
          // processVariables.put("Draw", Double.parseDouble(draw));
          processVariables.put("Settle", Double.parseDouble(settle));
+         processVariables.put("LabOffset", Double.parseDouble(labOffset));
          processVariables.put("Coupled", (double) 0);
          processMessageLabel.setText("Values submitted");
          process = processVariables.get("Process");
@@ -4497,6 +4522,7 @@ public class Form extends javax.swing.JFrame {
          process.put(8, 1, "Isolated Moves");
          process.put(9, 1, "Trim (ft)");
          process.put(10, 1, "Draw");
+         process.put(11, 1, "Lab Offset (sec)");
          process.put(1, 2, startDate);
          process.put(2, 2, processVariables.get("Process").toString());
          process.put(3, 2, processVariables.get("QCS").toString());
@@ -4507,6 +4533,7 @@ public class Form extends javax.swing.JFrame {
          process.put(8, 2, processVariables.get("Isolated").toString());
          process.put(9, 2, processVariables.get("Trim").toString());
          process.put(10, 2, processVariables.get("Draw").toString());
+         process.put(11, 2, processVariables.get("LabOffset").toString());
          write(process, "process");
          Table<Integer, Integer, String> lab = TreeBasedTable.create();
          // Below data labels form part of the DG-13a requirement (from Appendix D -

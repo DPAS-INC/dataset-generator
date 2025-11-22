@@ -5,8 +5,6 @@ import com.google.common.collect.Table;
 public class StateCalculator {
   private final Table<Integer, Integer, String> data;
   private final Table<Integer, Integer, String> state;
-  private final double trim;
-  private final double draw;
   private final int finalRow;
   private int lastInputCol;
   
@@ -16,14 +14,10 @@ public static final double DRAW_FACTOR = 1.1;
 
   public StateCalculator(Table<Integer, Integer, String> data,
                          Table<Integer, Integer, String> state,
-                         double trim,
-                         double draw,
                          int finalRow,
                          int lastInputCol) {
     this.data = data;
     this.state = state;
-    this.trim = trim;
-    this.draw = draw;
     this.finalRow = finalRow;
     this.lastInputCol = lastInputCol;
   }
@@ -46,9 +40,9 @@ public static final double DRAW_FACTOR = 1.1;
         else {
            double jetVelocity = Double.parseDouble(data.get(i, searchCol("MV_JettoWire", data))) * wireSpeed;
            data.put(i, searchCol("MV_HeadboxPressure", data), String.valueOf(Math.pow(jetVelocity, 2) / (2 * 115920)));
-           double sliceOpening = Double.parseDouble(data.get(i, searchCol("MV_ThinStockFlow", data))) * 12 / (7.48 * jetVelocity * trim);
+           double sliceOpening = Double.parseDouble(data.get(i, searchCol("MV_ThinStockFlow", data))) * 12 / (7.48 * jetVelocity * TRIM_AMOUNT);
            data.put(i, searchCol("MV_SliceOpening", data), String.valueOf(sliceOpening));
-           data.put(i, searchCol("MV_MachineSpeed", data), String.valueOf(wireSpeed * draw));
+           data.put(i, searchCol("MV_MachineSpeed", data), String.valueOf(wireSpeed * DRAW_FACTOR));
         }
 
         double swFlow = Double.parseDouble(data.get(i, searchCol("MV_SWFlow", data)));
