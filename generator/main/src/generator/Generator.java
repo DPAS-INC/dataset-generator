@@ -44,6 +44,8 @@ public class Generator {
    int processPeriod;
    // labPeriod: Lab period time
    int labPeriod;
+   // labOffset;
+   int labOffset;
    // pulpeyePeriod: PulpEye period time
    int pulpeyePeriod;
    // qcsPeriod: QCS period time
@@ -98,6 +100,7 @@ public class Generator {
       processPeriod = process.get("Process").intValue();
       qcsPeriod = process.get("QCS").intValue();
       labPeriod = process.get("Lab").intValue();
+      labOffset = process.get("LabOffset").intValue();
       pulpeyePeriod = process.get("Pulpeye").intValue();
       uncoupledMoves = process.get("Uncoupled").intValue();
       trim = StateCalculator.TRIM_AMOUNT;
@@ -741,10 +744,14 @@ public class Generator {
        * Instead, line () uses the modulus operator to only do the value calculation
        * for every lab row
        */
-      labPeriod = labPeriod / processPeriod;
+      
       for (int i = firstLab; i < lastLab + 1; i++) {
          String name = data.get(1, i);
-         int numRows = labPeriod;
+         
+         // Randomize LAB period for each lab
+         int randomOffset = (int) ((Math.random() * 2 - 1) * labOffset);
+         int numRows = (labPeriod + randomOffset) / processPeriod;
+         
          for (int j = 3; j <= finalRow; j++) {
             // Only a specific set of initial rows don't require dynamics
             if (j > dynRow) {
