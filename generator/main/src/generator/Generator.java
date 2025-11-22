@@ -744,12 +744,14 @@ public class Generator {
        * Instead, line () uses the modulus operator to only do the value calculation
        * for every lab row
        */
-      int randomOffset = (int) ((Math.random() * 2 - 1) * labOffset);
       
-      labPeriod = (labPeriod + randomOffset) / processPeriod;
       for (int i = firstLab; i < lastLab + 1; i++) {
          String name = data.get(1, i);
-         int numRows = labPeriod;
+         
+         // Randomize LAB period for each lab
+         int randomOffset = (int) ((Math.random() * 2 - 1) * labOffset);
+         int numRows = (labPeriod + randomOffset) / processPeriod;
+         
          for (int j = 3; j <= finalRow; j++) {
             // Only a specific set of initial rows don't require dynamics
             if (j > dynRow) {
