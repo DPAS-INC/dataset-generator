@@ -103,8 +103,9 @@ public class Generator {
       labOffset = process.get("LabOffset").intValue();
       pulpeyePeriod = process.get("Pulpeye").intValue();
       uncoupledMoves = process.get("Uncoupled").intValue();
+      isolatedMoves = process.get("Isolated").intValue();
       trim = StateCalculator.TRIM_AMOUNT;
-	  draw = StateCalculator.DRAW_FACTOR;
+	   draw = StateCalculator.DRAW_FACTOR;
       coupledMoves = process.get("Coupled").intValue();
       numInputs = input.columnKeySet().size() - 1;
       numOutputs = labOutputs.keySet().size();
@@ -442,15 +443,10 @@ public class Generator {
             double sinePeriod = Double.parseDouble(input.get(10, inputIdx));
             double amplitude = Double.parseDouble(input.get(11, inputIdx));
             double mvLag = Double.parseDouble(input.get(7, inputIdx));
-
-            double stepSize;
-            if (isolatedMoves != 0)
-               stepSize = (max - min) / isolatedMoves;
-            else
-               stepSize = max - min;
-
+            double stepSize = (max - min) / isolatedMoves;
             double filter;
             double mvFilter;
+            
             if (mvLag <= 0)
                filter = 1;
             else
@@ -465,30 +461,65 @@ public class Generator {
                double move = min + stepSize * j;
                for (int x = 1; x <= (rowsPerMove / rowsPerProcess); x++) {
                   row = lastInRow + rowsPerProcess * x;
-                  double noiseVal = calcNoise(noise);
-                  double sineVal = calcSine(sinePeriod, amplitude, row);
-                  double priorVal = Double.parseDouble(data.get(row - 1, inputIdx));
-                  double newVal = priorVal * (1 - mvFilter) + move * mvFilter;
-                  if (newVal < min)
-                     newVal = min;
-                  else if (newVal > max)
-                     newVal = max;
-                  data.put(row, inputIdx, String.valueOf((newVal + noiseVal + sineVal)));
+                  
+                  // Process all inputs for this row
+                  for (int otherInput = 2; otherInput < lastInCol; otherInput++) {
+                     double otherNoise = Double.parseDouble(input.get(6, otherInput));
+                     double otherSinePeriod = Double.parseDouble(input.get(10, otherInput));
+                     double otherAmplitude = Double.parseDouble(input.get(11, otherInput));
+                     double otherMin = Double.parseDouble(input.get(9, otherInput));
+                     double otherMax = Double.parseDouble(input.get(8, otherInput));
+                     
+                     double noiseVal = calcNoise(otherNoise);
+                     double sineVal = calcSine(otherSinePeriod, otherAmplitude, row);
+                     
+                     if (otherInput == inputIdx) {
+                        // This is the input being moved - apply filter and move logic
+                        double priorVal = Double.parseDouble(data.get(row - 1, inputIdx));
+                        double newVal = priorVal * (1 - mvFilter) + move * mvFilter;
+                        if (newVal < min)
+                           newVal = min;
+                        else if (newVal > max)
+                           newVal = max;
+                        data.put(row, inputIdx, String.valueOf((newVal + noiseVal + sineVal)));
+                     } else {
+                        // This input stays steady at its current value
+                        double steadyValue = Double.parseDouble(data.get(row - 1, otherInput));
+                        // Remove old noise/sine from steady value and add new ones
+                        double baseValue = steadyValue;
+                        // Clamp to min/max
+                        if (baseValue < otherMin)
+                           baseValue = otherMin;
+                        else if (baseValue > otherMax)
+                           baseValue = otherMax;
+                        data.put(row, otherInput, String.valueOf((baseValue + noiseVal + sineVal)));
+                     }
+                  }
                }
                lastInRow = row;
             }
 
-            // Settle period: keep all inputs at their current values
-            for (int i = 2; i < lastInCol; i++) {
-               double currentNoise = Double.parseDouble(input.get(6, i));
-               double currentSinePeriod = Double.parseDouble(input.get(10, i));
-               double currentAmplitude = Double.parseDouble(input.get(11, i));
-               double settleValue = Double.parseDouble(data.get(lastInRow, i));
-
-               for (int x = 1; x <= (rowsPerMove / rowsPerProcess); x++) {
-                  row = lastInRow + rowsPerProcess * x;
+            // Settle period after moving this input: keep all inputs at their current values
+            for (int x = 1; x <= (rowsPerMove / rowsPerProcess); x++) {
+               row = lastInRow + rowsPerProcess * x;
+               
+               for (int i = 2; i < lastInCol; i++) {
+                  double currentNoise = Double.parseDouble(input.get(6, i));
+                  double currentSinePeriod = Double.parseDouble(input.get(10, i));
+                  double currentAmplitude = Double.parseDouble(input.get(11, i));
+                  double currentMin = Double.parseDouble(input.get(9, i));
+                  double currentMax = Double.parseDouble(input.get(8, i));
+                  double settleValue = Double.parseDouble(data.get(row - 1, i));
+                  
                   double noiseVal = calcNoise(currentNoise);
                   double sineVal = calcSine(currentSinePeriod, currentAmplitude, row);
+                  
+                  // Clamp to min/max
+                  if (settleValue < currentMin)
+                     settleValue = currentMin;
+                  else if (settleValue > currentMax)
+                     settleValue = currentMax;
+                  
                   data.put(row, i, String.valueOf((settleValue + noiseVal + sineVal)));
                }
             }
