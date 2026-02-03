@@ -439,11 +439,12 @@ public class Generator {
          for (int inputIdx = 2; inputIdx < lastInCol; inputIdx++) {
             double min = Double.parseDouble(input.get(9, inputIdx));
             double max = Double.parseDouble(input.get(8, inputIdx));
+            double avg = min + (max - min) / 2;
             double noise = Double.parseDouble(input.get(6, inputIdx));
             double sinePeriod = Double.parseDouble(input.get(10, inputIdx));
             double amplitude = Double.parseDouble(input.get(11, inputIdx));
             double mvLag = Double.parseDouble(input.get(7, inputIdx));
-            double stepSize = (max - min) / isolatedMoves;
+            double stepSize = (max - avg) / isolatedMoves;
             double filter;
             double mvFilter;
             
@@ -456,9 +457,17 @@ public class Generator {
             else
                mvFilter = filter;
 
-            // Move this input from min to max
-            for (int j = 0; j <= isolatedMoves; j++) {
-               double move = min + stepSize * j;
+            // Move this input from avg to max
+            for (int j = 0; j <= isolatedMoves * 2; j++) {
+               double move;
+               if (j <= isolatedMoves) {
+                  // Going from avg to max
+                  move = avg + stepSize * j;
+               } else {
+                  // Coming back from max to avg
+                  move = max - stepSize * (j - isolatedMoves);
+               }
+               
                for (int x = 1; x <= (rowsPerMove / rowsPerProcess); x++) {
                   row = lastInRow + rowsPerProcess * x;
                   
