@@ -465,9 +465,9 @@ public class Generator {
             double mvLag = Double.parseDouble(input.get(7, inputIdx));
             double stepSize;
             if (isolatedMoves != 0)
-               stepSize = (max - avg) / isolatedMoves;
+               stepSize = (max - min) / (isolatedMoves);
             else
-               stepSize = max - avg;
+               stepSize = max - min;
             
             double filter;
             double mvFilter;
@@ -480,16 +480,19 @@ public class Generator {
             else
                mvFilter = filter;
 
-            // Move this input from avg to max and back to avg
-            for (int j = 0; j <= isolatedMoves * 2; j++) {
-               double move;
-               if (j <= isolatedMoves) {
-                  // Going from avg to max
-                  move = avg + stepSize * j;
-               } else {
-                  // Coming back from max to avg
-                  move = max - stepSize * (j - isolatedMoves);
-               }
+            // Move this input: avg -> min -> max -> avg
+            for (int j = 0; j <= isolatedMoves + 1; j++) {
+            double move;
+            if (j == 0) {
+               // Instantly jump to min
+               move = min;
+            } else if (j <= isolatedMoves) {
+               // Gradually move from min to max
+               move = min + stepSize * (j - 1);
+            } else {
+               // Instantly jump back to avg
+               move = avg;
+            }
                
                for (int x = 1; x <= (rowsPerMove / rowsPerProcess); x++) {
                   row = lastInRow + rowsPerProcess * x;
@@ -525,7 +528,7 @@ public class Generator {
             }
 
             // Settle period after moving this input: keep all inputs at their average
-            for (int x = 1; x <= (rowsPerMove / rowsPerProcess); x++) {
+            for (int x = 1; x <= (rowsPerMove / rowsPerProcess) / 4; x++) {
                row = lastInRow + rowsPerProcess * x;
                
                for (int i = 2; i < lastInCol; i++) {
