@@ -436,6 +436,25 @@ public class Generator {
       // End of MV_UCMove routine
       // MV_IsolatedMove routine for isolated moves
       if (isolatedMoves > 0) {
+         // First, set all inputs to their average values
+         for (int i = 2; i < lastInCol; i++) {
+            double min = Double.parseDouble(input.get(9, i));
+            double max = Double.parseDouble(input.get(8, i));
+            double avg = min + (max - min) / 2;
+            double noise = Double.parseDouble(input.get(6, i));
+            double sinePeriod = Double.parseDouble(input.get(10, i));
+            double amplitude = Double.parseDouble(input.get(11, i));
+            
+            for (int x = 1; x <= (rowsPerMove / rowsPerProcess); x++) {
+               row = lastInRow + rowsPerProcess * x;
+               double noiseVal = calcNoise(noise);
+               double sineVal = calcSine(sinePeriod, amplitude, row);
+               data.put(row, i, String.valueOf((avg + noiseVal + sineVal)));
+            }
+         }
+         lastInRow = row;
+         
+         // Now move each input one at a time
          for (int inputIdx = 2; inputIdx < lastInCol; inputIdx++) {
             double min = Double.parseDouble(input.get(9, inputIdx));
             double max = Double.parseDouble(input.get(8, inputIdx));
@@ -444,10 +463,14 @@ public class Generator {
             double sinePeriod = Double.parseDouble(input.get(10, inputIdx));
             double amplitude = Double.parseDouble(input.get(11, inputIdx));
             double mvLag = Double.parseDouble(input.get(7, inputIdx));
-            double stepSize = (max - avg) / isolatedMoves;
+            double stepSize;
+            if (isolatedMoves != 0)
+               stepSize = (max - avg) / isolatedMoves;
+            else
+               stepSize = max - avg;
+            
             double filter;
             double mvFilter;
-            
             if (mvLag <= 0)
                filter = 1;
             else
@@ -457,7 +480,7 @@ public class Generator {
             else
                mvFilter = filter;
 
-            // Move this input from avg to max
+            // Move this input from avg to max and back to avg
             for (int j = 0; j <= isolatedMoves * 2; j++) {
                double move;
                if (j <= isolatedMoves) {
@@ -478,6 +501,7 @@ public class Generator {
                      double otherAmplitude = Double.parseDouble(input.get(11, otherInput));
                      double otherMin = Double.parseDouble(input.get(9, otherInput));
                      double otherMax = Double.parseDouble(input.get(8, otherInput));
+                     double otherAvg = otherMin + (otherMax - otherMin) / 2;
                      
                      double noiseVal = calcNoise(otherNoise);
                      double sineVal = calcSine(otherSinePeriod, otherAmplitude, row);
@@ -492,23 +516,15 @@ public class Generator {
                            newVal = max;
                         data.put(row, inputIdx, String.valueOf((newVal + noiseVal + sineVal)));
                      } else {
-                        // This input stays steady at its current value
-                        double steadyValue = Double.parseDouble(data.get(row - 1, otherInput));
-                        // Remove old noise/sine from steady value and add new ones
-                        double baseValue = steadyValue;
-                        // Clamp to min/max
-                        if (baseValue < otherMin)
-                           baseValue = otherMin;
-                        else if (baseValue > otherMax)
-                           baseValue = otherMax;
-                        data.put(row, otherInput, String.valueOf((baseValue + noiseVal + sineVal)));
+                        // Other inputs stay at their average
+                        data.put(row, otherInput, String.valueOf((otherAvg + noiseVal + sineVal)));
                      }
                   }
                }
                lastInRow = row;
             }
 
-            // Settle period after moving this input: keep all inputs at their current values
+            // Settle period after moving this input: keep all inputs at their average
             for (int x = 1; x <= (rowsPerMove / rowsPerProcess); x++) {
                row = lastInRow + rowsPerProcess * x;
                
@@ -518,18 +534,12 @@ public class Generator {
                   double currentAmplitude = Double.parseDouble(input.get(11, i));
                   double currentMin = Double.parseDouble(input.get(9, i));
                   double currentMax = Double.parseDouble(input.get(8, i));
-                  double settleValue = Double.parseDouble(data.get(row - 1, i));
+                  double currentAvg = currentMin + (currentMax - currentMin) / 2;
                   
                   double noiseVal = calcNoise(currentNoise);
                   double sineVal = calcSine(currentSinePeriod, currentAmplitude, row);
                   
-                  // Clamp to min/max
-                  if (settleValue < currentMin)
-                     settleValue = currentMin;
-                  else if (settleValue > currentMax)
-                     settleValue = currentMax;
-                  
-                  data.put(row, i, String.valueOf((settleValue + noiseVal + sineVal)));
+                  data.put(row, i, String.valueOf((currentAvg + noiseVal + sineVal)));
                }
             }
             lastInRow = row;
