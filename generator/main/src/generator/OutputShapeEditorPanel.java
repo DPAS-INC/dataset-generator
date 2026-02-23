@@ -19,7 +19,6 @@ public class OutputShapeEditorPanel extends JPanel {
     private JTextField outputMinField;
     private JTextField outputMaxField;
     
-    // Chart component — pure Java2D, no external library needed
     private CurvePanel curvePanel;
     
     // Info display
@@ -28,9 +27,6 @@ public class OutputShapeEditorPanel extends JPanel {
     private JLabel gainAsymptoteLabel;
     private JLabel midOutputLabel;
     
-    // -------------------------------------------------------------------------
-    // Inner class: draws the gain curve using Java2D Graphics2D only
-    // -------------------------------------------------------------------------
     private class CurvePanel extends JPanel {
         private double[] xPoints = new double[201];
         private double[] yPoints = new double[201];
