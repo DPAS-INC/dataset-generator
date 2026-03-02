@@ -4157,12 +4157,16 @@ public class Form extends javax.swing.JFrame {
             modelIdx, orderIdx + 1, shapeIdx, directionIdx,
             asymptote, slope, outMin, outMax);
 
-      // Wrap in a modal dialog
+      // Wrap in a resizable modal dialog sized to 90% of the screen
       javax.swing.JDialog shapeDialog = new javax.swing.JDialog(this, "Output Shape Editor — Preview", true);
       shapeDialog.setDefaultCloseOperation(javax.swing.JDialog.DISPOSE_ON_CLOSE);
       shapeDialog.setContentPane(editorPanel);
-      shapeDialog.pack();
-      shapeDialog.setMinimumSize(new java.awt.Dimension(900, 600));
+      shapeDialog.setResizable(true);
+      java.awt.Dimension screen = java.awt.Toolkit.getDefaultToolkit().getScreenSize();
+      int dlgW = (int) (screen.width  * 0.90);
+      int dlgH = (int) (screen.height * 0.90);
+      shapeDialog.setSize(dlgW, dlgH);
+      shapeDialog.setMinimumSize(new java.awt.Dimension(900, 620));
       shapeDialog.setLocationRelativeTo(this);
       shapeDialog.setVisible(true);
    }
