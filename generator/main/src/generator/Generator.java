@@ -105,7 +105,7 @@ public class Generator {
       uncoupledMoves = process.get("Uncoupled").intValue();
       isolatedMoves = process.get("Isolated").intValue();
       trim = StateCalculator.TRIM_AMOUNT;
-	   draw = StateCalculator.DRAW_FACTOR;
+      draw = StateCalculator.DRAW_FACTOR;
       coupledMoves = process.get("Coupled").intValue();
       numInputs = input.columnKeySet().size() - 1;
       numOutputs = labOutputs.keySet().size();
@@ -444,7 +444,7 @@ public class Generator {
             double noise = Double.parseDouble(input.get(6, i));
             double sinePeriod = Double.parseDouble(input.get(10, i));
             double amplitude = Double.parseDouble(input.get(11, i));
-            
+
             for (int x = 1; x <= (rowsPerMove / rowsPerProcess); x++) {
                row = lastInRow + rowsPerProcess * x;
                double noiseVal = calcNoise(noise);
@@ -453,7 +453,7 @@ public class Generator {
             }
          }
          lastInRow = row;
-         
+
          // Now move each input one at a time
          for (int inputIdx = 2; inputIdx < lastInCol; inputIdx++) {
             double min = Double.parseDouble(input.get(9, inputIdx));
@@ -468,7 +468,7 @@ public class Generator {
                stepSize = (max - min) / (isolatedMoves);
             else
                stepSize = max - min;
-            
+
             double filter;
             double mvFilter;
             if (mvLag <= 0)
@@ -482,21 +482,21 @@ public class Generator {
 
             // Move this input: avg -> min -> max -> avg
             for (int j = 0; j <= isolatedMoves + 1; j++) {
-            double move;
-            if (j == 0) {
-               // Instantly jump to min
-               move = min;
-            } else if (j <= isolatedMoves) {
-               // Gradually move from min to max
-               move = min + stepSize * (j - 1);
-            } else {
-               // Instantly jump back to avg
-               move = avg;
-            }
-               
+               double move;
+               if (j == 0) {
+                  // Instantly jump to min
+                  move = min;
+               } else if (j <= isolatedMoves) {
+                  // Gradually move from min to max
+                  move = min + stepSize * (j - 1);
+               } else {
+                  // Instantly jump back to avg
+                  move = avg;
+               }
+
                for (int x = 1; x <= (rowsPerMove / rowsPerProcess); x++) {
                   row = lastInRow + rowsPerProcess * x;
-                  
+
                   // Process all inputs for this row
                   for (int otherInput = 2; otherInput < lastInCol; otherInput++) {
                      double otherNoise = Double.parseDouble(input.get(6, otherInput));
@@ -505,10 +505,10 @@ public class Generator {
                      double otherMin = Double.parseDouble(input.get(9, otherInput));
                      double otherMax = Double.parseDouble(input.get(8, otherInput));
                      double otherAvg = otherMin + (otherMax - otherMin) / 2;
-                     
+
                      double noiseVal = calcNoise(otherNoise);
                      double sineVal = calcSine(otherSinePeriod, otherAmplitude, row);
-                     
+
                      if (otherInput == inputIdx) {
                         // This is the input being moved - apply filter and move logic
                         double priorVal = Double.parseDouble(data.get(row - 1, inputIdx));
@@ -530,7 +530,7 @@ public class Generator {
             // Settle period after moving this input: keep all inputs at their average
             for (int x = 1; x <= (rowsPerMove / rowsPerProcess) / 4; x++) {
                row = lastInRow + rowsPerProcess * x;
-               
+
                for (int i = 2; i < lastInCol; i++) {
                   double currentNoise = Double.parseDouble(input.get(6, i));
                   double currentSinePeriod = Double.parseDouble(input.get(10, i));
@@ -538,10 +538,10 @@ public class Generator {
                   double currentMin = Double.parseDouble(input.get(9, i));
                   double currentMax = Double.parseDouble(input.get(8, i));
                   double currentAvg = currentMin + (currentMax - currentMin) / 2;
-                  
+
                   double noiseVal = calcNoise(currentNoise);
                   double sineVal = calcSine(currentSinePeriod, currentAmplitude, row);
-                  
+
                   data.put(row, i, String.valueOf((currentAvg + noiseVal + sineVal)));
                }
             }
@@ -636,10 +636,9 @@ public class Generator {
     * removed by myself)
     */
    public void calcState() {
-	    new StateCalculator(data, state, finalRow, lastInputCol)
-	            .calcState();
-	}
-
+      new StateCalculator(data, state, finalRow, lastInputCol)
+            .calcState();
+   }
 
    /*
     * dynamicValues: Method that is translated and adapted from 'SecondOrder.bas'
@@ -746,21 +745,19 @@ public class Generator {
     */
    public void calcStateDyn() {
 
-	    calcStateDyn qcs = new calcStateDyn(
-	            data,
-	            state,
-	            input,
-	            dyn,
-	            finalRow,
-	            lastInputCol,
-	            firstVal,
-	            dynRow,
-	            this::dynamicValues
-	    );
+      CalcStateDyn qcs = new CalcStateDyn(
+            data,
+            state,
+            input,
+            dyn,
+            finalRow,
+            lastInputCol,
+            firstVal,
+            dynRow,
+            this::dynamicValues);
 
-	    qcs.calcStateDyn();
-	}
-
+      qcs.CalcStateDyn();
+   }
 
    /*
     * calcLab: Method that is translated and adapted from 'CalcLab.bas' from the
@@ -797,14 +794,14 @@ public class Generator {
        * Instead, line () uses the modulus operator to only do the value calculation
        * for every lab row
        */
-      
+
       for (int i = firstLab; i < lastLab + 1; i++) {
          String name = data.get(1, i);
-         
+
          // Randomize LAB period for each lab
          int randomOffset = (int) ((Math.random() * 2 - 1) * labOffset);
          int numRows = (labPeriod + randomOffset) / processPeriod;
-         
+
          for (int j = 3; j <= finalRow; j++) {
             // Only a specific set of initial rows don't require dynamics
             if (j > dynRow) {
