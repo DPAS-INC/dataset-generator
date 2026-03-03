@@ -756,7 +756,7 @@ public class Generator {
             dynRow,
             this::dynamicValues);
 
-      qcs.CalcStateDyn();
+      qcs.calcStateDyn();
    }
 
    /*

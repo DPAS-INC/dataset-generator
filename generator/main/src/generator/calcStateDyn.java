@@ -55,6 +55,6 @@ public class CalcStateDyn {
         return 2 * Math.random() * noise - noise;
     }
 
-    public void CalcStateDyn() {
+    public void calcStateDyn() {
     }
 }
