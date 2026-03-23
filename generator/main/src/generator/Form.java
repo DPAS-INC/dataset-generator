@@ -3404,6 +3404,8 @@ public class Form extends javax.swing.JFrame {
          processMessageLabel.setText("Lab period is not a multiple of the Process period");
       } else if (!checkDate(date)) {
          processMessageLabel.setText("Start date is in an incorrect format");
+      } else if (Integer.parseInt(labOffset) >= Integer.parseInt(lab)) {
+         processMessageLabel.setText("Lab Offset must be less than Lab period");
       } else {
          // Values are placed into the final HashMap
          processVariables.put("Process", (double) 0);
