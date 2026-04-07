@@ -2515,13 +2515,70 @@ public class Form extends javax.swing.JFrame {
 
             },
             new String[] {
-                  "Ouput", "Variable", "Weight", "Asymptote", "Order", "Slope", "Model", "Direction", "Shape"
-            }));
-      labTable.setRowHeight(21);
-      labTable.setSelectionBackground(new java.awt.Color(255, 255, 255));
+                  "Preview", "Ouput", "Variable", "Weight", "Asymptote", "Order", "Slope", "Model", "Direction", "Shape"
+            }) {
+         @Override
+         public boolean isCellEditable(int row, int column) {
+            return column == 0; // Only Preview column is "editable" (for button click)
+         }
+      });
+      labTable.setRowHeight(25);
+      labTable.setSelectionBackground(new java.awt.Color(204, 229, 255));
       labTable.setSelectionForeground(new java.awt.Color(0, 0, 0));
       labTable.setShowGrid(true);
       labTable.getTableHeader().setReorderingAllowed(false);
+
+      // ── Preview button column (column 0) — renderer + editor ──
+      javax.swing.table.TableColumn previewCol = labTable.getColumnModel().getColumn(0);
+      previewCol.setMinWidth(60);
+      previewCol.setMaxWidth(60);
+      previewCol.setPreferredWidth(60);
+
+      // Renderer: draws a JButton in every row
+      previewCol.setCellRenderer(new javax.swing.table.TableCellRenderer() {
+         private final javax.swing.JButton btn = new javax.swing.JButton("View");
+         {
+            btn.setBackground(new java.awt.Color(255, 153, 0));
+            btn.setForeground(java.awt.Color.WHITE);
+            btn.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 11));
+            btn.setMargin(new java.awt.Insets(1, 2, 1, 2));
+            btn.setFocusPainted(false);
+            btn.setBorderPainted(true);
+         }
+         @Override
+         public java.awt.Component getTableCellRendererComponent(JTable table, Object value,
+               boolean isSelected, boolean hasFocus, int row, int column) {
+            return btn;
+         }
+      });
+
+      // Editor: single click opens the shape editor immediately for that row
+      previewCol.setCellEditor(new DefaultCellEditor(new javax.swing.JCheckBox()) {
+         {
+            setClickCountToStart(1);
+         }
+         @Override
+         public java.awt.Component getTableCellEditorComponent(JTable table, Object value,
+               boolean isSelected, int row, int column) {
+            // Fire editing stopped immediately, then open the dialog
+            javax.swing.SwingUtilities.invokeLater(() -> {
+               fireEditingStopped();
+               openShapeEditorForRow(row);
+            });
+            // Return a button so something sensible is shown briefly
+            javax.swing.JButton btn = new javax.swing.JButton("View");
+            btn.setBackground(new java.awt.Color(255, 153, 0));
+            btn.setForeground(java.awt.Color.WHITE);
+            btn.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 11));
+            btn.setMargin(new java.awt.Insets(1, 2, 1, 2));
+            return btn;
+         }
+         @Override
+         public Object getCellEditorValue() {
+            return "";
+         }
+      });
+
       labScroll.setViewportView(labTable);
 
       modelInfoButton.setBackground(new java.awt.Color(51, 153, 255));
@@ -2575,7 +2632,7 @@ public class Form extends javax.swing.JFrame {
                         .addGap(56, 56, 56)
                         .addGroup(labConfigLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                               .addGroup(labConfigLayout.createSequentialGroup()
-                                    .addComponent(labScroll, javax.swing.GroupLayout.PREFERRED_SIZE, 823,
+                                    .addComponent(labScroll, javax.swing.GroupLayout.PREFERRED_SIZE, 883,
                                           javax.swing.GroupLayout.PREFERRED_SIZE)
                                     .addGap(0, 0, Short.MAX_VALUE))
                               .addGroup(labConfigLayout.createSequentialGroup()
@@ -3264,7 +3321,7 @@ public class Form extends javax.swing.JFrame {
                error = true;
                break;
             } else {
-               insert(labModel, new Object[] { key, tempLab.get(i, 1),
+               insert(labModel, new Object[] { "", key, tempLab.get(i, 1),
                      weight, asymptote, tempLab.get(i, 4), slope,
                      tempLab.get(i, 6), tempLab.get(i, 7), tempLab.get(i, 8) });
             }
@@ -4060,10 +4117,10 @@ public class Form extends javax.swing.JFrame {
          // values
          if (!outPrinted) {
             setOutputTable();
-            setBox(labTable, 4, orderTableBox);
-            setBox(labTable, 6, modelTableBox);
-            setBox(labTable, 7, dirTableBox);
-            setBox(labTable, 8, shapeTableBox);
+            setBox(labTable, 5, orderTableBox);
+            setBox(labTable, 7, modelTableBox);
+            setBox(labTable, 8, dirTableBox);
+            setBox(labTable, 9, shapeTableBox);
             outPrinted = true;
          }
          if (!inputSet || !stateSet || !outputSet) {
@@ -4090,8 +4147,8 @@ public class Form extends javax.swing.JFrame {
          varBox.addItem(state.get(1, i));
          varTableBox.addItem(state.get(1, i));
       }
-      setBox(labTable, 0, outTableBox);
-      setBox(labTable, 1, varTableBox);
+      setBox(labTable, 1, outTableBox);
+      setBox(labTable, 2, varTableBox);
    }
 
    // The following set of methods are for the Lab Configuration page
@@ -4172,6 +4229,94 @@ public class Form extends javax.swing.JFrame {
    }
 
    /*
+    * openShapeEditorForRow: Opens the Output Shape Editor pre-populated with
+    * a specific lab table row's values. When the user clicks "Apply & Close",
+    * the modified Asymptote, Order, Slope, Model, Direction and Shape values
+    * are written back into that row of the table.
+    *
+    * Column mapping (with Preview column at index 0):
+    * 0=Preview, 1=Output, 2=Variable, 3=Weight, 4=Asymptote,
+    * 5=Order, 6=Slope, 7=Model, 8=Direction, 9=Shape
+    */
+   private void openShapeEditorForRow(int row) {
+      if (row < 0 || row >= labModel.getRowCount()) return;
+
+      String outputName = labModel.getValueAt(row, 1).toString().trim();
+      String varName    = labModel.getValueAt(row, 2).toString().trim();
+      int modelIdx      = Integer.parseInt(labModel.getValueAt(row, 7).toString().trim());
+      int orderVal      = Integer.parseInt(labModel.getValueAt(row, 5).toString().trim());
+      int shapeIdx      = Integer.parseInt(labModel.getValueAt(row, 9).toString().trim());
+      int directionIdx  = Integer.parseInt(labModel.getValueAt(row, 8).toString().trim());
+      String asymptote  = labModel.getValueAt(row, 4).toString().trim();
+      String slope      = labModel.getValueAt(row, 6).toString().trim();
+
+      // Look up output min/max
+      String outMin = "";
+      String outMax = "";
+      for (int i = 2; i <= output.columnKeySet().size(); i++) {
+         if (output.get(1, i) != null && output.get(1, i).equals(outputName)) {
+            outMin = output.get(5, i) != null ? output.get(5, i) : "";
+            outMax = output.get(4, i) != null ? output.get(4, i) : "";
+            break;
+         }
+      }
+
+      OutputShapeEditorPanel editorPanel = new OutputShapeEditorPanel(
+            modelIdx, orderVal, shapeIdx, directionIdx,
+            asymptote, slope, outMin, outMax);
+
+      javax.swing.JDialog shapeDialog = new javax.swing.JDialog(this,
+            "Output Shape Editor — " + outputName + " / " + varName, true);
+      shapeDialog.setDefaultCloseOperation(javax.swing.JDialog.DISPOSE_ON_CLOSE);
+
+      // Wrapper with Apply & Close / Close buttons at the bottom
+      JPanel wrapper = new JPanel(new java.awt.BorderLayout());
+      wrapper.add(editorPanel, java.awt.BorderLayout.CENTER);
+
+      JPanel buttonPanel = new JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.RIGHT, 10, 6));
+      buttonPanel.setBackground(new java.awt.Color(245, 246, 248));
+
+      javax.swing.JButton applyButton = new javax.swing.JButton("Apply & Close");
+      applyButton.setBackground(new java.awt.Color(51, 153, 255));
+      applyButton.setForeground(java.awt.Color.WHITE);
+      applyButton.setFont(new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 14));
+      applyButton.setMargin(new java.awt.Insets(6, 20, 6, 20));
+      applyButton.setFocusPainted(false);
+      applyButton.addActionListener(e -> {
+         // Write modified values back into the table row
+         labModel.setValueAt(editorPanel.getAsymptoteText(),                  row, 4);
+         labModel.setValueAt(String.valueOf(editorPanel.getOrder()),          row, 5);
+         labModel.setValueAt(editorPanel.getSlopeText(),                      row, 6);
+         labModel.setValueAt(String.valueOf(editorPanel.getModelIndex()),     row, 7);
+         labModel.setValueAt(String.valueOf(editorPanel.getDirectionIndex()), row, 8);
+         labModel.setValueAt(String.valueOf(editorPanel.getShapeIndex()),     row, 9);
+         shapeDialog.dispose();
+      });
+
+      javax.swing.JButton cancelButton = new javax.swing.JButton("Close");
+      cancelButton.setBackground(java.awt.Color.WHITE);
+      cancelButton.setForeground(new java.awt.Color(80, 80, 80));
+      cancelButton.setFont(new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 14));
+      cancelButton.setMargin(new java.awt.Insets(6, 20, 6, 20));
+      cancelButton.setFocusPainted(false);
+      cancelButton.addActionListener(e -> shapeDialog.dispose());
+
+      buttonPanel.add(cancelButton);
+      buttonPanel.add(applyButton);
+      wrapper.add(buttonPanel, java.awt.BorderLayout.SOUTH);
+
+      shapeDialog.setContentPane(wrapper);
+      shapeDialog.setResizable(true);
+      java.awt.Dimension screen = java.awt.Toolkit.getDefaultToolkit().getScreenSize();
+      int dlgW = (int) (screen.width  * 0.90);
+      int dlgH = (int) (screen.height * 0.90);
+      shapeDialog.setSize(dlgW, dlgH);
+      shapeDialog.setMinimumSize(new java.awt.Dimension(900, 620));
+      shapeDialog.setLocationRelativeTo(this);
+      shapeDialog.setVisible(true);
+   }
+
+   /*
     * labAddButtonActionPerformed: Method when clicking on the Add row button
     * Method shell (not body) was auto-generated from the GUI builder
     */
@@ -4186,7 +4331,7 @@ public class Form extends javax.swing.JFrame {
             (!slope.isEmpty() && Doubles.tryParse(slope) == null))
          labMessageLabel.setText("Values must be a number");
       else {
-         insert(labModel, new Object[] { outputBox.getSelectedItem().toString(), varBox.getSelectedItem().toString(),
+         insert(labModel, new Object[] { "", outputBox.getSelectedItem().toString(), varBox.getSelectedItem().toString(),
                labWeightField.getText(), asymptote, orderBox.getSelectedItem().toString(), slope,
                modelBox.getSelectedItem().toString(), directionBox.getSelectedItem().toString(),
                shapeBox.getSelectedItem().toString() });
@@ -4233,17 +4378,17 @@ public class Form extends javax.swing.JFrame {
       }
       for (int i = 0; i < labModel.getRowCount(); i++) {
          for (String key : labOutputs.keySet()) {
-            if (key.equals(labModel.getValueAt(i, 0).toString())) {
+            if (key.equals(labModel.getValueAt(i, 1).toString())) {
                Table<Integer, Integer, String> table = labOutputs.get(key);
                int row = table.rowKeySet().size() + 1;
-               table.put(row, 1, labModel.getValueAt(i, 1).toString().trim());
-               table.put(row, 2, labModel.getValueAt(i, 2).toString().trim());
-               table.put(row, 3, labModel.getValueAt(i, 3).toString().trim());
-               table.put(row, 4, labModel.getValueAt(i, 4).toString().trim());
-               table.put(row, 5, labModel.getValueAt(i, 5).toString().trim());
-               table.put(row, 6, labModel.getValueAt(i, 6).toString().trim());
-               table.put(row, 7, labModel.getValueAt(i, 7).toString().trim());
-               table.put(row, 8, labModel.getValueAt(i, 8).toString().trim());
+               table.put(row, 1, labModel.getValueAt(i, 2).toString().trim());
+               table.put(row, 2, labModel.getValueAt(i, 3).toString().trim());
+               table.put(row, 3, labModel.getValueAt(i, 4).toString().trim());
+               table.put(row, 4, labModel.getValueAt(i, 5).toString().trim());
+               table.put(row, 5, labModel.getValueAt(i, 6).toString().trim());
+               table.put(row, 6, labModel.getValueAt(i, 7).toString().trim());
+               table.put(row, 7, labModel.getValueAt(i, 8).toString().trim());
+               table.put(row, 8, labModel.getValueAt(i, 9).toString().trim());
             }
          }
       }

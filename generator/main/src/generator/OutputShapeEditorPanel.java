@@ -522,4 +522,38 @@ public class OutputShapeEditorPanel extends JPanel {
             return 1 - (direction - (2 * direction - 1) / sigDen);
         }
     }
+
+    // -------------------------------------------------------------------------
+    // Getters — allow the caller to read back the (possibly modified) values
+    // -------------------------------------------------------------------------
+
+    /** Returns the selected Gain Model index (0=Polynomial, 1=Exponential, 2=Sigmoid). */
+    public int getModelIndex() {
+        return modelBox.getSelectedIndex();
+    }
+
+    /** Returns the selected Order value (1 or 2). */
+    public int getOrder() {
+        return Integer.parseInt(orderBox.getSelectedItem().toString());
+    }
+
+    /** Returns the selected Gain Shape index (0=Flatten, 1=Swing, 2=Asymptote). */
+    public int getShapeIndex() {
+        return shapeBox.getSelectedIndex();
+    }
+
+    /** Returns the selected Direction index (0=Down, 1=Up). */
+    public int getDirectionIndex() {
+        return directionBox.getSelectedIndex();
+    }
+
+    /** Returns the current Asymptote text (may be empty). */
+    public String getAsymptoteText() {
+        return asymptoteField.getText().trim();
+    }
+
+    /** Returns the current Slope text (may be empty). */
+    public String getSlopeText() {
+        return slopeField.getText().trim();
+    }
 }
