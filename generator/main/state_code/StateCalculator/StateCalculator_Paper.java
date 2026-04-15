@@ -1,6 +1,8 @@
-// Copy and paste this file into src/generator/StateCalculator.java for PAPER state variables
-
 package generator;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 
 import com.google.common.collect.Table;
 
@@ -10,8 +12,12 @@ public class StateCalculator {
    private final int finalRow;
    private int lastInputCol;
 
-   public static final int TRIM_AMOUNT = 20;
-   public static final double DRAW_FACTOR = 1.1;
+   public static final Map<String, Double> PROCESS_VARIABLES = new HashMap<>();
+
+   static {
+      PROCESS_VARIABLES.put("TRIM_AMOUNT", 20.0);
+      PROCESS_VARIABLES.put("DRAW_FACTOR", 1.1);
+   }
 
    public StateCalculator(Table<Integer, Integer, String> data,
          Table<Integer, Integer, String> state,
@@ -44,9 +50,10 @@ public class StateCalculator {
             double jetVelocity = Double.parseDouble(data.get(i, searchCol("MV_JettoWire", data))) * wireSpeed;
             data.put(i, searchCol("MV_HeadboxPressure", data), String.valueOf(Math.pow(jetVelocity, 2) / (2 * 115920)));
             double sliceOpening = Double.parseDouble(data.get(i, searchCol("MV_ThinStockFlow", data))) * 12
-                  / (7.48 * jetVelocity * TRIM_AMOUNT);
+                  / (7.48 * jetVelocity * PROCESS_VARIABLES.get("TRIM_AMOUNT"));
             data.put(i, searchCol("MV_SliceOpening", data), String.valueOf(sliceOpening));
-            data.put(i, searchCol("MV_MachineSpeed", data), String.valueOf(wireSpeed * DRAW_FACTOR));
+            data.put(i, searchCol("MV_MachineSpeed", data),
+                  String.valueOf(wireSpeed * PROCESS_VARIABLES.get("DRAW_FACTOR")));
          }
 
          double swFlow = Double.parseDouble(data.get(i, searchCol("MV_SWFlow", data)));
@@ -104,7 +111,7 @@ public class StateCalculator {
    private int searchCol(String name, Table<Integer, Integer, String> t) {
       for (int i = 2; i < lastInputCol + 3; i++) {
          String var = t.get(1, i);
-         if (var.equals(name))
+         if (Objects.equals(var, name))
             return i;
       }
       return 0;

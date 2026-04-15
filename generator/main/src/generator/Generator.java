@@ -13,6 +13,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 // Apache Commons CSV external library classes
@@ -66,16 +68,17 @@ public class Generator {
    int uncoupledMoves;
    // isolatedMoves: The number of isolated moves
    int isolatedMoves;
-   // trim: The trim value
-   double trim;
-   // draw: The draw value
-   double draw;
+   // stateVariables
+   Map<String, Double> stateVariables = new HashMap<>();
    // lastInputCol: The last column for input/state variables
    int lastInputCol;
    // firstVal: The column number of the first input variable used in calculations
    int firstVal;
    // dynRow: The final row before dynamics are applied
    int dynRow;
+   // Resolved QCS / thin-stock column headers (from input + state + data row 1,
+   // not literals)
+   private TableHeaders.QcsDynColumnNames qcsDynColumns;
 
    // This constructor initialises all variables and applies some calculation from
    // the client's Excel tool (available on OneDrive) and some of the client's code
@@ -104,8 +107,7 @@ public class Generator {
       pulpeyePeriod = process.get("Pulpeye").intValue();
       uncoupledMoves = process.get("Uncoupled").intValue();
       isolatedMoves = process.get("Isolated").intValue();
-      trim = StateCalculator.TRIM_AMOUNT;
-      draw = StateCalculator.DRAW_FACTOR;
+      stateVariables = StateCalculator.PROCESS_VARIABLES;
       coupledMoves = process.get("Coupled").intValue();
       numInputs = input.columnKeySet().size() - 1;
       numOutputs = labOutputs.keySet().size();
@@ -218,7 +220,7 @@ public class Generator {
    private int searchCol(String name, Table<Integer, Integer, String> t) {
       for (int i = 2; i < lastInputCol + 3; i++) {
          String var = t.get(1, i);
-         if (var.equals(name))
+         if (Objects.equals(var, name))
             return i;
       }
       return 0;
@@ -584,11 +586,11 @@ public class Generator {
       // List is used to note essential variables
       List<Integer> inputNames = new ArrayList<>();
       calcList(inputNames, numInputs, input);
-      // Input variables that are required in QCS variable calculations are added
-      inputNames.add(searchCol("MV_ThinStockFlow", input));
-      inputNames.add(searchCol("MV_ThinStockConsistency", input));
-      inputNames.add(searchCol("MV_PressLoad", input));
-      inputNames.add(searchCol("MV_SteamPressure", input));
+      qcsDynColumns = TableHeaders.resolveQcsDynColumns(input, state, data, numInputs, numState, lastInputCol);
+      addInputColumnIfPresent(inputNames, qcsDynColumns.thinStockFlowInput());
+      addInputColumnIfPresent(inputNames, qcsDynColumns.thinStockConsistencyInput());
+      addInputColumnIfPresent(inputNames, qcsDynColumns.pressLoadInput());
+      addInputColumnIfPresent(inputNames, qcsDynColumns.steamPressureInput());
       /*
        * Below code was adapted from this website:
        * https://www.freecodecamp.org/news/how-to-sort-a-list-in-java/
@@ -600,6 +602,16 @@ public class Generator {
       // to be written
       firstVal = inputNames.get(0);
       write(false, "data");
+   }
+
+   private void addInputColumnIfPresent(List<Integer> inputNames, String headerName) {
+      if (headerName == null) {
+         return;
+      }
+      int c = searchCol(headerName, input);
+      if (c > 0 && !inputNames.contains(c)) {
+         inputNames.add(c);
+      }
    }
 
    /*
@@ -744,6 +756,9 @@ public class Generator {
     * removed by myself)
     */
    public void calcStateDyn() {
+      TableHeaders.QcsDynColumnNames cols = qcsDynColumns != null
+            ? qcsDynColumns
+            : TableHeaders.resolveQcsDynColumns(input, state, data, numInputs, numState, lastInputCol);
 
       CalcStateDyn qcs = new CalcStateDyn(
             data,

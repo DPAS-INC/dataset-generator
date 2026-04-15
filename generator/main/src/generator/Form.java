@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
@@ -3768,13 +3769,13 @@ public class Form extends javax.swing.JFrame {
                   settleField.setText(String.valueOf((int) Double.parseDouble(tempProcess.get(6, 2))));
                   ucField.setText(String.valueOf((int) Double.parseDouble(tempProcess.get(7, 2))));
                   isolatedField.setText(String.valueOf((int) Double.parseDouble(tempProcess.get(8, 2))));
-                  trimField.setText(tempProcess.get(9, 2));
-                  drawField.setText(tempProcess.get(10, 2));
-                  if (tempProcess.get(11, 2) != null) {
-                        labOffsetField.setText(String.valueOf((int) Double.parseDouble(tempProcess.get(11, 2))));
+                  if (tempProcess.get(9, 2) != null) {
+                        labOffsetField.setText(String.valueOf((int) Double.parseDouble(tempProcess.get(9, 2))));
                   } else {
                         labOffsetField.setText("0");
                   }
+                  trimField.setText(tempProcess.get(10, 2));
+                  drawField.setText(tempProcess.get(11, 2));
 
                   // Data is placed into UI tables and dropdown boxes
                   for (int i = 2; i <= tempDesc.columnKeySet().size(); i++) {
@@ -3895,6 +3896,29 @@ public class Form extends javax.swing.JFrame {
             }
       }
 
+      // resolveLoadFolder: Method for resolving the folder entered in the load field
+      // into a concrete directory on disk.
+      private File resolveLoadFolder() throws IOException {
+            String folderText = loadField.getText().trim();
+            if (folderText.isEmpty()) {
+                  throw new IOException("Load folder is empty");
+            }
+
+            List<File> candidates = new ArrayList<>();
+            File typedPath = new File(folderText);
+            candidates.add(typedPath);
+            candidates.add(new File("config", folderText));
+
+            for (File candidate : candidates) {
+                  File canonical = candidate.getCanonicalFile();
+                  if (canonical.exists() && canonical.isDirectory()) {
+                        return canonical;
+                  }
+            }
+
+            throw new IOException("Folder does not exist: " + folderText);
+      }
+
       // read: Method for reading a CSV file into a data table given the data table
       // and file name
       private void read(Table<Integer, Integer, String> table, String name) {
@@ -3905,9 +3929,9 @@ public class Form extends javax.swing.JFrame {
                    * array-list-in-java
                    * Adapted lines are explained below
                    */
-                  // A File object was used instead of a String from the answer, the path was also
-                  // changed
-                  File file = new File("config/" + loadField.getText() + "/" + name + ".csv");
+                  File baseDir = resolveLoadFolder();
+
+                  File file = new File(baseDir, name + ".csv");
                   // The same list variable was used, but renamed by myself
                   List<String[]> csv = new ArrayList<>();
                   // The BufferedReader line was re-arranged
@@ -3933,7 +3957,7 @@ public class Form extends javax.swing.JFrame {
                         c = 0;
                   }
             } catch (Exception e) {
-                  loadMessageLabel.setText("Error, ensure a file named " + name + ".csv exists in the folder");
+                  loadMessageLabel.setText("Error, ensure a file named " + name + ".csv exists in the selected folder");
                   e.printStackTrace();
             }
       }
@@ -4026,7 +4050,7 @@ public class Form extends javax.swing.JFrame {
                         || Ints.tryParse(qcs) == null || Ints.tryParse(uc) == null || Ints.tryParse(labOffset) == null
                         || Ints.tryParse(isolated) == null
                         || Ints.tryParse(settle) == null)
-                  processMessageLabel.setText("Values fields must be a number, only trim and draw can be a decimal");
+                  processMessageLabel.setText("Value fields must be whole numbers");
             else if (Integer.parseInt(qcs) % Integer.parseInt(processPeriod) != 0) {
                   processMessageLabel.setText("Analyzer period is not a multiple of the Process period");
             } else if (Integer.parseInt(pulp) % Integer.parseInt(processPeriod) != 0) {
@@ -4051,11 +4075,16 @@ public class Form extends javax.swing.JFrame {
                   processVariables.put("Pulpeye", Double.parseDouble(pulp));
                   processVariables.put("Uncoupled", Double.parseDouble(uc));
                   processVariables.put("Isolated", Double.parseDouble(isolated));
-                  // processVariables.put("Trim", Double.parseDouble(trim));
-                  // processVariables.put("Draw", Double.parseDouble(draw));
                   processVariables.put("Settle", Double.parseDouble(settle));
                   processVariables.put("LabOffset", Double.parseDouble(labOffset));
                   processVariables.put("Coupled", (double) 0);
+
+                  // Include any state-related constants/config values that are currently defined.
+                  // This replaces the old special-casing for Trim/Draw fields.
+                  for (Entry<String, Double> e : StateCalculator.PROCESS_VARIABLES.entrySet()) {
+                        processVariables.put(e.getKey(), e.getValue());
+                  }
+
                   processMessageLabel.setText("Values submitted");
                   process = processVariables.get("Process");
             }
@@ -4928,9 +4957,7 @@ public class Form extends javax.swing.JFrame {
             for (int i = 2; i <= input.columnKeySet().size(); i++) {
                   list.add(input.get(1, i));
             }
-            for (int i = 2; i <= state.columnKeySet().size(); i++) {
-                  list.add(state.get(1, i));
-            }
+            list.addAll(TableHeaders.stateVariableNames(state));
             // The array below contains hard-coded variables in 'Generator.java' that must
             // be present
             // Below data labels form part of the DG-2 and DG-4 requirements (from Appendix
@@ -5113,14 +5140,23 @@ public class Form extends javax.swing.JFrame {
        * Method shell (not body) was auto-generated from the GUI builder
        */
       private void downloadFolderButtonActionPerformed() {
-            // Creates the folder that the user entered
+            // Creates the folder that the user entered (relative to the process working
+            // directory)
             try {
-                  File file = new File("config/" + downloadField.getText());
+                  String folderName = downloadField.getText().trim();
+                  if (folderName.isEmpty()) {
+                        infoLabel.setText("Please enter a folder name");
+                        return;
+                  }
+                  File file = new File(folderName);
                   if (!file.exists()) {
-                        file.mkdir();
+                        if (!file.mkdirs()) {
+                              infoLabel.setText("Could not create folder");
+                              return;
+                        }
                         download();
                   } else
-                        infoLabel.setText("Folder already exists in config");
+                        infoLabel.setText("Folder already exists");
             } catch (Exception e) {
                   infoLabel.setText("Folder name is not in a correct format");
             }
@@ -5130,7 +5166,7 @@ public class Form extends javax.swing.JFrame {
       public void write(Table<Integer, Integer, String> table, String name) {
             try {
                   BufferedWriter writer = new BufferedWriter(
-                              new FileWriter("config/" + downloadField.getText() + "/" + name + ".csv"));
+                              new FileWriter(new File(downloadField.getText().trim(), name + ".csv")));
                   /*
                    * Below code was adapted from the question in this website:
                    * https://stackoverflow.com/questions/38524942/guava-table-to-csv
@@ -5183,9 +5219,9 @@ public class Form extends javax.swing.JFrame {
                   process.put(6, 1, "Added Settle Time (sec)");
                   process.put(7, 1, "Uncoupled Moves");
                   process.put(8, 1, "Isolated Moves");
-                  process.put(9, 1, "Trim (ft)");
-                  process.put(10, 1, "Draw");
-                  process.put(11, 1, "Lab Offset (sec)");
+                  process.put(9, 1, "Lab Offset (sec)");
+                  process.put(10, 1, "Trim (ft)");
+                  process.put(11, 1, "Draw");
                   process.put(1, 2, startDate);
                   process.put(2, 2, processVariables.get("Process").toString());
                   process.put(3, 2, processVariables.get("QCS").toString());
@@ -5194,9 +5230,9 @@ public class Form extends javax.swing.JFrame {
                   process.put(6, 2, processVariables.get("Settle").toString());
                   process.put(7, 2, processVariables.get("Uncoupled").toString());
                   process.put(8, 2, processVariables.get("Isolated").toString());
-                  process.put(9, 2, processVariables.get("Trim").toString());
-                  process.put(10, 2, processVariables.get("Draw").toString());
-                  process.put(11, 2, processVariables.get("LabOffset").toString());
+                  process.put(9, 2, processVariables.get("LabOffset").toString());
+                  process.put(10, 2, processVariables.get("Trim").toString());
+                  process.put(11, 2, processVariables.get("Draw").toString());
                   write(process, "process");
                   Table<Integer, Integer, String> lab = TreeBasedTable.create();
                   // Below data labels form part of the DG-13a requirement (from Appendix D -

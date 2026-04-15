@@ -1,6 +1,7 @@
-// Copy and paste this file into src/generator/CalcStateDyn.java for PAPER state variables
-
 package generator;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import com.google.common.collect.Table;
 
@@ -21,7 +22,12 @@ public class CalcStateDyn {
     private final int dynRow;
     private final DynamicValueFunction dynamicValues;
 
-    public static final int TRIM_AMOUNT = 20;
+    public static final Map<String, Double> PROCESS_VARIABLES = new HashMap<>();
+
+    static {
+        // Keep in sync with StateCalculator.STATE_VARIABLES.
+        PROCESS_VARIABLES.putAll(StateCalculator.PROCESS_VARIABLES);
+    }
 
     public CalcStateDyn(
             Table<Integer, Integer, String> data,
@@ -123,7 +129,7 @@ public class CalcStateDyn {
             if (machineSpeed <= 1)
                 boneDryWeight = 0;
             else
-                boneDryWeight = fiberToHeadbox * 3300 / (machineSpeed * TRIM_AMOUNT);
+                boneDryWeight = fiberToHeadbox * 3300 / (machineSpeed * PROCESS_VARIABLES.get("TRIM_AMOUNT"));
             data.put(i, searchCol("QCS_BoneDryWeight", data), String.valueOf(boneDryWeight));
             data.put(i, searchCol("QCS_BasisWeight", data), String.valueOf(
                     boneDryWeight * (1 + Double.parseDouble(data.get(i, searchCol("QCS_Moisture", data))) / 100)));
@@ -134,4 +140,5 @@ public class CalcStateDyn {
                     capMinCalc + (capMaxCalc - capMinCalc) / Math.exp((pressLoad - 700) * caliperSlope) + noise));
         }
     }
+
 }
