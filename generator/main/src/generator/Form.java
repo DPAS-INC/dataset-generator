@@ -188,7 +188,6 @@ public class Form extends javax.swing.JFrame {
    private javax.swing.JLabel settleLabel;
    private javax.swing.JComboBox<String> shapeBox;
    private javax.swing.JButton shapeInfoButton;
-   private javax.swing.JButton previewShapeButton;
    private javax.swing.JPanel sideBar;
    private javax.swing.JTextField sineAmpField;
    private javax.swing.JLabel sineAmpLabel;
@@ -599,7 +598,6 @@ public class Form extends javax.swing.JFrame {
       modelInfoButton = new javax.swing.JButton();
       directionInfoButton = new javax.swing.JButton();
       shapeInfoButton = new javax.swing.JButton();
-      previewShapeButton = new javax.swing.JButton();
       generate = new javax.swing.JPanel();
       infoLabel = new javax.swing.JLabel();
       genButton = new javax.swing.JButton();
@@ -2515,7 +2513,7 @@ public class Form extends javax.swing.JFrame {
 
             },
             new String[] {
-                  "Preview", "Ouput", "Variable", "Weight", "Asymptote", "Order", "Slope", "Model", "Direction", "Shape"
+                  "Preview Shape", "Ouput", "Variable", "Weight", "Asymptote", "Order", "Slope", "Model", "Direction", "Shape"
             }) {
          @Override
          public boolean isCellEditable(int row, int column) {
@@ -2530,9 +2528,9 @@ public class Form extends javax.swing.JFrame {
 
       // ── Preview button column (column 0) — renderer + editor ──
       javax.swing.table.TableColumn previewCol = labTable.getColumnModel().getColumn(0);
-      previewCol.setMinWidth(60);
-      previewCol.setMaxWidth(60);
-      previewCol.setPreferredWidth(60);
+      previewCol.setMinWidth(100);
+      previewCol.setMaxWidth(100);
+      previewCol.setPreferredWidth(100);
 
       // Renderer: draws a JButton in every row
       previewCol.setCellRenderer(new javax.swing.table.TableCellRenderer() {
@@ -2611,16 +2609,6 @@ public class Form extends javax.swing.JFrame {
       shapeInfoButton.addActionListener(new java.awt.event.ActionListener() {
          public void actionPerformed(java.awt.event.ActionEvent evt) {
             shapeInfoButtonActionPerformed();
-         }
-      });
-
-      previewShapeButton.setBackground(new java.awt.Color(255, 153, 0));
-      previewShapeButton.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
-      previewShapeButton.setForeground(new java.awt.Color(255, 255, 255));
-      previewShapeButton.setText("Preview Shape");
-      previewShapeButton.addActionListener(new java.awt.event.ActionListener() {
-         public void actionPerformed(java.awt.event.ActionEvent evt) {
-            previewShapeButtonActionPerformed();
          }
       });
 
@@ -2746,8 +2734,6 @@ public class Form extends javax.swing.JFrame {
                               javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(shapeInfoButton)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(previewShapeButton)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED,
                               javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(labMessageLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 373,
@@ -2825,7 +2811,6 @@ public class Form extends javax.swing.JFrame {
                                                 javax.swing.GroupLayout.PREFERRED_SIZE)
                                           .addComponent(shapeInfoButton, javax.swing.GroupLayout.PREFERRED_SIZE, 22,
                                                 javax.swing.GroupLayout.PREFERRED_SIZE)
-                                          .addComponent(previewShapeButton)
                                           .addComponent(labMessageLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 30,
                                                 javax.swing.GroupLayout.PREFERRED_SIZE)))
                               .addGroup(labConfigLayout.createSequentialGroup()
