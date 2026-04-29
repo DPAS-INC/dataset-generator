@@ -14,11 +14,6 @@ public class StateCalculator {
 
     public static final Map<String, Double> PROCESS_VARIABLES = new HashMap<>();
 
-    static {
-        PROCESS_VARIABLES.put("TRIM_AMOUNT", 20.0);
-        PROCESS_VARIABLES.put("DRAW_FACTOR", 1.1);
-    }
-
     public StateCalculator(Table<Integer, Integer, String> data,
             Table<Integer, Integer, String> state,
             int finalRow,
@@ -33,57 +28,6 @@ public class StateCalculator {
      * calcState: Method that applies specific calculations to some state variables
      */
     public void calcState() {
-        System.out.println("calcState");
-        stateSetup(searchCol("MV_SWFreeness", state), searchCol("MV_SWSpecificEnergy", data),
-                searchCol("MV_SWFreeness", data));
-        stateSetup(searchCol("MV_HWFreeness", state), searchCol("MV_HWSpecificEnergy", data),
-                searchCol("MV_HWFreeness", data));
-        stateSetup(searchCol("MV_OCCFreeness", state), searchCol("MV_OCCSpecificEnergy", data),
-                searchCol("MV_OCCFreeness", data));
-        for (int i = 3; i <= finalRow; i++) {
-            double wireSpeed = Double.parseDouble(data.get(i, searchCol("MV_WireSpeed", data)));
-            if (wireSpeed <= 1) {
-                data.put(i, searchCol("MV_HeadboxPressure", data), "0");
-                data.put(i, searchCol("MV_SliceOpening", data), "0.2");
-                data.put(i, searchCol("MV_MachineSpeed", data), "0");
-            } else {
-                double jetVelocity = Double.parseDouble(data.get(i, searchCol("MV_JettoWire", data))) * wireSpeed;
-                data.put(i, searchCol("MV_HeadboxPressure", data),
-                        String.valueOf(Math.pow(jetVelocity, 2) / (2 * 115920)));
-                double sliceOpening = Double.parseDouble(data.get(i, searchCol("MV_ThinStockFlow", data))) * 12
-                        / (7.48 * jetVelocity * PROCESS_VARIABLES.get("TRIM_AMOUNT"));
-                data.put(i, searchCol("MV_SliceOpening", data), String.valueOf(sliceOpening));
-                data.put(i, searchCol("MV_MachineSpeed", data),
-                        String.valueOf(wireSpeed * PROCESS_VARIABLES.get("DRAW_FACTOR")));
-            }
-
-            double swFlow = Double.parseDouble(data.get(i, searchCol("MV_SWFlow", data)));
-            double hwFlow = Double.parseDouble(data.get(i, searchCol("MV_HWFlow", data)));
-            double occFlow = Double.parseDouble(data.get(i, searchCol("MV_OCCFlow", data)));
-            double swCrill = Double.parseDouble(data.get(i, searchCol("PulpEye_SWCrill", data)));
-            double hwCrill = Double.parseDouble(data.get(i, searchCol("PulpEye_HWCrill", data)));
-            double occCrill = Double.parseDouble(data.get(i, searchCol("PulpEye_OCCCrill", data)));
-            double totalFlow = swFlow + hwFlow + occFlow;
-            double swFreeness = Double.parseDouble(data.get(i, searchCol("MV_SWFreeness", data)));
-            double hwFreeness = Double.parseDouble(data.get(i, searchCol("MV_HWFreeness", data)));
-            double occFreeness = Double.parseDouble(data.get(i, searchCol("MV_OCCFreeness", data)));
-            if (totalFlow <= 100) {
-                data.put(i, searchCol("MV_SWPct", data), "0");
-                data.put(i, searchCol("MV_HWPct", data), "0");
-                data.put(i, searchCol("MV_OCCPct", data), "0");
-                data.put(i, searchCol("PulpEye_BlendFreeness", data), "0");
-                data.put(i, searchCol("PulpEye_BlendCrill", data), "0");
-            } else {
-                data.put(i, searchCol("MV_SWPct", data), String.valueOf(100 * swFlow / totalFlow));
-                data.put(i, searchCol("MV_HWPct", data), String.valueOf(100 * hwFlow / totalFlow));
-                data.put(i, searchCol("MV_OCCPct", data), String.valueOf(100 * occFlow / totalFlow));
-                data.put(i, searchCol("PulpEye_BlendFreeness", data),
-                        String.valueOf(
-                                (swFreeness * swFlow + hwFreeness * hwFlow + occFreeness * occFlow) / totalFlow));
-                data.put(i, searchCol("PulpEye_BlendCrill", data),
-                        String.valueOf((swCrill * swFlow + hwCrill * hwFlow + occCrill * occFlow) / totalFlow));
-            }
-        }
     }
 
     // --- helpers private to this class ---
