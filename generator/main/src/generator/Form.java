@@ -4762,8 +4762,11 @@ public class Form extends javax.swing.JFrame {
       private void labButtonActionPerformed() {
             if (input.isEmpty())
                   dialog("Please fill out the input configurations", "Output Error");
-            else if (state.isEmpty())
-                  dialog("Please fill out the state configurations", "Output Error");
+            /*
+             * Commented below to prevent error when there is no state code.
+             */
+            // else if (state.isEmpty())
+            //       dialog("Please fill out the state configurations", "Output Error");
             else if (output.isEmpty())
                   dialog("Please fill out the previous output configurations", "Output Error");
             else {
