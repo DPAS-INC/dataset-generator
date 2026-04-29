@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.Random;
 
 // Apache Commons CSV external library classes
 import org.apache.commons.csv.CSVFormat;
@@ -834,7 +835,15 @@ public class Generator {
                data.put(j, i, String.valueOf(gainModel(name, stateRow, j)));
          }
       }
+      // generate a random offset between -labOffset and +labOffset
+      int offset = random.nextInt(2 * labOffset + 1) - labOffset;
+      int spacing = labPeriod + offset; // adjust the spacing for the next sample
+      if (spacing < 1) spacing = 1; // make sure spacing is at least 1 row (avoid errors)
+
+      nextLabRow += spacing;  // schedule the next lab sample
    }
+}
+}
 
    /*
     * gainModel: Method that is translated and adapted from the 'GainModelRows'
