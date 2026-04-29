@@ -189,6 +189,7 @@ public class Form extends javax.swing.JFrame {
       private javax.swing.JLabel settleLabel;
       private javax.swing.JComboBox<String> shapeBox;
       private javax.swing.JButton shapeInfoButton;
+      private javax.swing.JButton previewShapeButton;
       private javax.swing.JPanel sideBar;
       private javax.swing.JTextField sineAmpField;
       private javax.swing.JLabel sineAmpLabel;
@@ -599,6 +600,7 @@ public class Form extends javax.swing.JFrame {
             modelInfoButton = new javax.swing.JButton();
             directionInfoButton = new javax.swing.JButton();
             shapeInfoButton = new javax.swing.JButton();
+            previewShapeButton = new javax.swing.JButton();
             generate = new javax.swing.JPanel();
             infoLabel = new javax.swing.JLabel();
             genButton = new javax.swing.JButton();
@@ -3036,6 +3038,16 @@ public class Form extends javax.swing.JFrame {
                   }
             });
 
+            previewShapeButton.setBackground(new java.awt.Color(255, 153, 0));
+            previewShapeButton.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
+            previewShapeButton.setForeground(new java.awt.Color(255, 255, 255));
+            previewShapeButton.setText("Preview Shape");
+            previewShapeButton.addActionListener(new java.awt.event.ActionListener() {
+                  public void actionPerformed(java.awt.event.ActionEvent evt) {
+                        previewShapeButtonActionPerformed();
+                  }
+            });
+
             javax.swing.GroupLayout labConfigLayout = new javax.swing.GroupLayout(labConfig);
             labConfig.setLayout(labConfigLayout);
             labConfigLayout.setHorizontalGroup(
@@ -3210,6 +3222,8 @@ public class Form extends javax.swing.JFrame {
                                                             javax.swing.GroupLayout.PREFERRED_SIZE)
                                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                                 .addComponent(shapeInfoButton)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                                .addComponent(previewShapeButton)
                                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED,
                                                             javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                                 .addComponent(labMessageLabel, javax.swing.GroupLayout.PREFERRED_SIZE,
@@ -3316,6 +3330,7 @@ public class Form extends javax.swing.JFrame {
                                                                                                 javax.swing.GroupLayout.PREFERRED_SIZE,
                                                                                                 22,
                                                                                                 javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                                                    .addComponent(previewShapeButton)
                                                                                     .addComponent(labMessageLabel,
                                                                                                 javax.swing.GroupLayout.PREFERRED_SIZE,
                                                                                                 30,
@@ -4775,6 +4790,54 @@ public class Form extends javax.swing.JFrame {
        */
       private void shapeInfoButtonActionPerformed() {
             dialog("<html>0 = Flatten<br/>1 = Swing<br/>2 = Asymptote</html>", "Gainshape Values");
+      }
+
+      /*
+       * previewShapeButtonActionPerformed: Opens the Output Shape Editor in a dialog,
+       * pre-populated with the current Lab Configuration field values so the user can
+       * visually preview and experiment with gain curve shapes before adding a row.
+       */
+      private void previewShapeButtonActionPerformed() {
+            // Parse current field values safely, falling back to defaults on any error
+            int modelIdx = modelBox.getSelectedIndex();
+            int orderIdx = orderBox.getSelectedIndex();
+            int shapeIdx = shapeBox.getSelectedIndex();
+            int directionIdx = directionBox.getSelectedIndex();
+            String asymptote = labAsymptoteField.getText().trim();
+            String slope = labSlopeField.getText().trim();
+
+            // Determine output min/max from the currently selected output variable
+            String outMin = "";
+            String outMax = "";
+            if (outputBox.getSelectedItem() != null) {
+                  String selected = outputBox.getSelectedItem().toString();
+                  for (int i = 2; i <= output.columnKeySet().size(); i++) {
+                        if (output.get(1, i) != null && output.get(1, i).equals(selected)) {
+                              // row 5 = Min, row 4 = Max (as stored by outputSubmitButtonActionPerformed)
+                              outMin = output.get(5, i) != null ? output.get(5, i) : "";
+                              outMax = output.get(4, i) != null ? output.get(4, i) : "";
+                              break;
+                        }
+                  }
+            }
+
+            // Build the panel using the parameterized constructor
+            OutputShapeEditorPanel editorPanel = new OutputShapeEditorPanel(
+                        modelIdx, orderIdx + 1, shapeIdx, directionIdx,
+                        asymptote, slope, outMin, outMax);
+
+            // Wrap in a resizable modal dialog sized to 90% of the screen
+            javax.swing.JDialog shapeDialog = new javax.swing.JDialog(this, "Output Shape Editor — Preview", true);
+            shapeDialog.setDefaultCloseOperation(javax.swing.JDialog.DISPOSE_ON_CLOSE);
+            shapeDialog.setContentPane(editorPanel);
+            shapeDialog.setResizable(true);
+            java.awt.Dimension screen = java.awt.Toolkit.getDefaultToolkit().getScreenSize();
+            int dlgW = (int) (screen.width * 0.90);
+            int dlgH = (int) (screen.height * 0.90);
+            shapeDialog.setSize(dlgW, dlgH);
+            shapeDialog.setMinimumSize(new java.awt.Dimension(900, 620));
+            shapeDialog.setLocationRelativeTo(this);
+            shapeDialog.setVisible(true);
       }
 
       /*
