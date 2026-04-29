@@ -7,7 +7,8 @@ public class Main {
 
       System.out.println("Dataset Generator loading...");
 
-      //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
+      // <editor-fold defaultstate="collapsed" desc=" Look and feel setting code
+      // (optional) ">
       try {
          for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
             if ("Nimbus".equals(info.getName())) {
@@ -33,5 +34,3 @@ public class Main {
       System.out.println("Dataset Generator loaded");
    }
 }
-
-

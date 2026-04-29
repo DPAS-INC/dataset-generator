@@ -13,6 +13,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.Random;
 
@@ -67,16 +69,17 @@ public class Generator {
    int uncoupledMoves;
    // isolatedMoves: The number of isolated moves
    int isolatedMoves;
-   // trim: The trim value
-   double trim;
-   // draw: The draw value
-   double draw;
+   // stateVariables
+   Map<String, Double> stateVariables = new HashMap<>();
    // lastInputCol: The last column for input/state variables
    int lastInputCol;
    // firstVal: The column number of the first input variable used in calculations
    int firstVal;
    // dynRow: The final row before dynamics are applied
    int dynRow;
+   // Resolved QCS / thin-stock column headers (from input + state + data row 1,
+   // not literals)
+   private TableHeaders.QcsDynColumnNames qcsDynColumns;
 
    // This constructor initialises all variables and applies some calculation from
    // the client's Excel tool (available on OneDrive) and some of the client's code
@@ -105,8 +108,7 @@ public class Generator {
       pulpeyePeriod = process.get("Pulpeye").intValue();
       uncoupledMoves = process.get("Uncoupled").intValue();
       isolatedMoves = process.get("Isolated").intValue();
-      trim = StateCalculator.TRIM_AMOUNT;
-	   draw = StateCalculator.DRAW_FACTOR;
+      stateVariables = StateCalculator.PROCESS_VARIABLES;
       coupledMoves = process.get("Coupled").intValue();
       numInputs = input.columnKeySet().size() - 1;
       numOutputs = labOutputs.keySet().size();
@@ -219,7 +221,7 @@ public class Generator {
    private int searchCol(String name, Table<Integer, Integer, String> t) {
       for (int i = 2; i < lastInputCol + 3; i++) {
          String var = t.get(1, i);
-         if (var.equals(name))
+         if (Objects.equals(var, name))
             return i;
       }
       return 0;
@@ -445,7 +447,7 @@ public class Generator {
             double noise = Double.parseDouble(input.get(6, i));
             double sinePeriod = Double.parseDouble(input.get(10, i));
             double amplitude = Double.parseDouble(input.get(11, i));
-            
+
             for (int x = 1; x <= (rowsPerMove / rowsPerProcess); x++) {
                row = lastInRow + rowsPerProcess * x;
                double noiseVal = calcNoise(noise);
@@ -454,7 +456,7 @@ public class Generator {
             }
          }
          lastInRow = row;
-         
+
          // Now move each input one at a time
          for (int inputIdx = 2; inputIdx < lastInCol; inputIdx++) {
             double min = Double.parseDouble(input.get(9, inputIdx));
@@ -469,7 +471,7 @@ public class Generator {
                stepSize = (max - min) / (isolatedMoves);
             else
                stepSize = max - min;
-            
+
             double filter;
             double mvFilter;
             if (mvLag <= 0)
@@ -483,21 +485,21 @@ public class Generator {
 
             // Move this input: avg -> min -> max -> avg
             for (int j = 0; j <= isolatedMoves + 1; j++) {
-            double move;
-            if (j == 0) {
-               // Instantly jump to min
-               move = min;
-            } else if (j <= isolatedMoves) {
-               // Gradually move from min to max
-               move = min + stepSize * (j - 1);
-            } else {
-               // Instantly jump back to avg
-               move = avg;
-            }
-               
+               double move;
+               if (j == 0) {
+                  // Instantly jump to min
+                  move = min;
+               } else if (j <= isolatedMoves) {
+                  // Gradually move from min to max
+                  move = min + stepSize * (j - 1);
+               } else {
+                  // Instantly jump back to avg
+                  move = avg;
+               }
+
                for (int x = 1; x <= (rowsPerMove / rowsPerProcess); x++) {
                   row = lastInRow + rowsPerProcess * x;
-                  
+
                   // Process all inputs for this row
                   for (int otherInput = 2; otherInput < lastInCol; otherInput++) {
                      double otherNoise = Double.parseDouble(input.get(6, otherInput));
@@ -506,10 +508,10 @@ public class Generator {
                      double otherMin = Double.parseDouble(input.get(9, otherInput));
                      double otherMax = Double.parseDouble(input.get(8, otherInput));
                      double otherAvg = otherMin + (otherMax - otherMin) / 2;
-                     
+
                      double noiseVal = calcNoise(otherNoise);
                      double sineVal = calcSine(otherSinePeriod, otherAmplitude, row);
-                     
+
                      if (otherInput == inputIdx) {
                         // This is the input being moved - apply filter and move logic
                         double priorVal = Double.parseDouble(data.get(row - 1, inputIdx));
@@ -531,7 +533,7 @@ public class Generator {
             // Settle period after moving this input: keep all inputs at their average
             for (int x = 1; x <= (rowsPerMove / rowsPerProcess) / 4; x++) {
                row = lastInRow + rowsPerProcess * x;
-               
+
                for (int i = 2; i < lastInCol; i++) {
                   double currentNoise = Double.parseDouble(input.get(6, i));
                   double currentSinePeriod = Double.parseDouble(input.get(10, i));
@@ -539,10 +541,10 @@ public class Generator {
                   double currentMin = Double.parseDouble(input.get(9, i));
                   double currentMax = Double.parseDouble(input.get(8, i));
                   double currentAvg = currentMin + (currentMax - currentMin) / 2;
-                  
+
                   double noiseVal = calcNoise(currentNoise);
                   double sineVal = calcSine(currentSinePeriod, currentAmplitude, row);
-                  
+
                   data.put(row, i, String.valueOf((currentAvg + noiseVal + sineVal)));
                }
             }
@@ -585,11 +587,11 @@ public class Generator {
       // List is used to note essential variables
       List<Integer> inputNames = new ArrayList<>();
       calcList(inputNames, numInputs, input);
-      // Input variables that are required in QCS variable calculations are added
-      inputNames.add(searchCol("MV_ThinStockFlow", input));
-      inputNames.add(searchCol("MV_ThinStockConsistency", input));
-      inputNames.add(searchCol("MV_PressLoad", input));
-      inputNames.add(searchCol("MV_SteamPressure", input));
+      qcsDynColumns = TableHeaders.resolveQcsDynColumns(input, state, data, numInputs, numState, lastInputCol);
+      addInputColumnIfPresent(inputNames, qcsDynColumns.thinStockFlowInput());
+      addInputColumnIfPresent(inputNames, qcsDynColumns.thinStockConsistencyInput());
+      addInputColumnIfPresent(inputNames, qcsDynColumns.pressLoadInput());
+      addInputColumnIfPresent(inputNames, qcsDynColumns.steamPressureInput());
       /*
        * Below code was adapted from this website:
        * https://www.freecodecamp.org/news/how-to-sort-a-list-in-java/
@@ -601,6 +603,16 @@ public class Generator {
       // to be written
       firstVal = inputNames.get(0);
       write(false, "data");
+   }
+
+   private void addInputColumnIfPresent(List<Integer> inputNames, String headerName) {
+      if (headerName == null) {
+         return;
+      }
+      int c = searchCol(headerName, input);
+      if (c > 0 && !inputNames.contains(c)) {
+         inputNames.add(c);
+      }
    }
 
    /*
@@ -637,10 +649,9 @@ public class Generator {
     * removed by myself)
     */
    public void calcState() {
-	    new StateCalculator(data, state, finalRow, lastInputCol)
-	            .calcState();
-	}
-
+      new StateCalculator(data, state, finalRow, lastInputCol)
+            .calcState();
+   }
 
    /*
     * dynamicValues: Method that is translated and adapted from 'SecondOrder.bas'
@@ -746,22 +757,23 @@ public class Generator {
     * removed by myself)
     */
    public void calcStateDyn() {
+      TableHeaders.QcsDynColumnNames cols = qcsDynColumns != null
+            ? qcsDynColumns
+            : TableHeaders.resolveQcsDynColumns(input, state, data, numInputs, numState, lastInputCol);
 
-	    calcStateDyn qcs = new calcStateDyn(
-	            data,
-	            state,
-	            input,
-	            dyn,
-	            finalRow,
-	            lastInputCol,
-	            firstVal,
-	            dynRow,
-	            this::dynamicValues
-	    );
+      CalcStateDyn qcs = new CalcStateDyn(
+            data,
+            state,
+            input,
+            dyn,
+            finalRow,
+            lastInputCol,
+            firstVal,
+            dynRow,
+            this::dynamicValues);
 
-	    qcs.calcStateDyn();
-	}
-
+      qcs.calcStateDyn();
+   }
 
    /*
     * calcLab: Method that is translated and adapted from 'CalcLab.bas' from the
@@ -798,27 +810,30 @@ public class Generator {
        * Instead, line () uses the modulus operator to only do the value calculation
        * for every lab row
        */
-      
-Random random = new Random();
 
-labPeriod = labPeriod / processPeriod;
-int nextLabRow = 3;  // this keeps track of when the next lab sample should happen
-
-for (int j = 3; j <= finalRow; j++) {
-   if (j > dynRow) {
-      for (int input : inputNames) {
-         dynamicValues(j, input, true);
-      }
-      for (int state : stateNames) {
-         dynamicValues(j, state, false);
-      }
-   }
-
-   if (j == nextLabRow) {
-	   // write all lab values at this row (same (random time) for all labs)
       for (int i = firstLab; i < lastLab + 1; i++) {
          String name = data.get(1, i);
-         data.put(j, i, String.valueOf(gainModel(name, stateRow, j)));
+
+         // Randomize LAB period for each lab
+         int randomOffset = (int) ((Math.random() * 2 - 1) * labOffset);
+         int numRows = (labPeriod + randomOffset) / processPeriod;
+
+         for (int j = 3; j <= finalRow; j++) {
+            // Only a specific set of initial rows don't require dynamics
+            if (j > dynRow) {
+               // I added this code to loop through the lists and apply dynamics
+               for (int input : inputNames) {
+                  dynamicValues(j, input, true);
+               }
+               for (int state : stateNames) {
+                  dynamicValues(j, state, false);
+               }
+            }
+            // In Java, I had to use the modulus operator so the row numbers would be
+            // correct
+            if ((j - 3) % numRows == 0)
+               data.put(j, i, String.valueOf(gainModel(name, stateRow, j)));
+         }
       }
       // generate a random offset between -labOffset and +labOffset
       int offset = random.nextInt(2 * labOffset + 1) - labOffset;
