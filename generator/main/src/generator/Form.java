@@ -3957,7 +3957,7 @@ public class Form extends javax.swing.JFrame {
       }
 
       // resolveLoadFolder: Method for resolving the folder entered in the load field
-      // into a concrete directory on disk.
+      // into a concrete directory on disk. Should fix the trim errors.
       private File resolveLoadFolder() throws IOException {
             String folderText = loadField.getText().trim();
             if (folderText.isEmpty()) {
@@ -4766,7 +4766,7 @@ public class Form extends javax.swing.JFrame {
              * Commented below to prevent error when there is no state code.
              */
             // else if (state.isEmpty())
-            //       dialog("Please fill out the state configurations", "Output Error");
+            // dialog("Please fill out the state configurations", "Output Error");
             else if (output.isEmpty())
                   dialog("Please fill out the previous output configurations", "Output Error");
             else {

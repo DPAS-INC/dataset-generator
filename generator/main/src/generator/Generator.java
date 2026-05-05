@@ -15,8 +15,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Collectors;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 // Apache Commons CSV external library classes
 import org.apache.commons.csv.CSVFormat;
@@ -811,36 +811,37 @@ public class Generator {
        * for every lab row
        */
 
-		Random random = new Random();
+      Random random = new Random();
 
-		labPeriod = labPeriod / processPeriod;
-		int nextLabRow = 3;  // this keeps track of when the next lab sample should happen
+      labPeriod = labPeriod / processPeriod;
+      int nextLabRow = 3; // this keeps track of when the next lab sample should happen
 
-		for (int j = 3; j <= finalRow; j++) {
-		   if (j > dynRow) {
-			  for (int input : inputNames) {
-				 dynamicValues(j, input, true);
-			  }
-			  for (int state : stateNames) {
-				 dynamicValues(j, state, false);
-			  }
-		   }
+      for (int j = 3; j <= finalRow; j++) {
+         if (j > dynRow) {
+            for (int input : inputNames) {
+               dynamicValues(j, input, true);
+            }
+            for (int state : stateNames) {
+               dynamicValues(j, state, false);
+            }
+         }
 
-		   if (j == nextLabRow) {
-			   // write all lab values at this row (same (random time) for all labs)
-			  for (int i = firstLab; i < lastLab + 1; i++) {
-				 String name = data.get(1, i);
-				 data.put(j, i, String.valueOf(gainModel(name, stateRow, j)));
-			  }
-			  // generate a random offset between -labOffset and +labOffset
-			  int offset = random.nextInt(2 * labOffset + 1) - labOffset;
-			  int spacing = labPeriod + offset; // adjust the spacing for the next sample
-			  if (spacing < 1) spacing = 1; // make sure spacing is at least 1 row (avoid errors)
+         if (j == nextLabRow) {
+            // write all lab values at this row (same (random time) for all labs)
+            for (int i = firstLab; i < lastLab + 1; i++) {
+               String name = data.get(1, i);
+               data.put(j, i, String.valueOf(gainModel(name, stateRow, j)));
+            }
+            // generate a random offset between -labOffset and +labOffset
+            int offset = random.nextInt(2 * labOffset + 1) - labOffset;
+            int spacing = labPeriod + offset; // adjust the spacing for the next sample
+            if (spacing < 1)
+               spacing = 1; // make sure spacing is at least 1 row (avoid errors)
 
-			  nextLabRow += spacing;  // schedule the next lab sample
-		   }
-		}
-}
+            nextLabRow += spacing; // schedule the next lab sample
+         }
+      }
+   }
 
    /*
     * gainModel: Method that is translated and adapted from the 'GainModelRows'

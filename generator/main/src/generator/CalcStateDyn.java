@@ -5,6 +5,7 @@ import java.util.Map;
 
 import com.google.common.collect.Table;
 
+// IMPORTANT: DO NOT ALLOW THIS TO BE RENAMED calcStateDyn
 public class CalcStateDyn {
 
     @FunctionalInterface
