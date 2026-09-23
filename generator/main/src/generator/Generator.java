@@ -580,9 +580,6 @@ public class Generator {
       }
       // VB code ends here, the rest of the method includes code written by myself
       finalRow = lastInRow;
-      System.out.println("lastInRow = " + lastInRow);
-      System.out.println("finalRow = " + finalRow);
-      System.out.println("numInputs = " + numInputs);
       // Empty values are required for the CSV to skip values accurately
       for (int i = 3; i <= finalRow; i++) {
          data.put(i, 1, "");
@@ -805,7 +802,6 @@ public class Generator {
       int lastLab = lastInputCol + numOutputs;
       int firstLab = lastInputCol + 1;
       int stateRow = numInputs + 2;
-      
       /*
        * The client made a change where the lab rows can be created only if needed
        * instead of removing everything at createDataset()
