@@ -112,7 +112,8 @@ public class Generator {
       coupledMoves = process.get("Coupled").intValue();
       numInputs = input.columnKeySet().size() - 1;
       numOutputs = labOutputs.keySet().size();
-      numState = state.columnKeySet().size() - 1;
+      // Prevents NoState configurations from producing a negative state count
+      numState = Math.max(0, state.columnKeySet().size() - 1);  
       // End of code reference
       // This variable is used from 'DynamicInputs.bas' from the client's code
       // (available on the Additional materials section on Moodle)
@@ -266,23 +267,23 @@ public class Generator {
          }
       } else
          t = data;
-      try {
-         // Ensure the /data folder exists before writing
-         File dataFolder = new File("data");
-         if (!dataFolder.exists()) {
-            dataFolder.mkdirs(); // create the folder
-         }
-         BufferedWriter writer = new BufferedWriter(new FileWriter("data/" + name + ".csv"));
-         /*
-          * Below code was adapted from the question in this website:
-          * https://stackoverflow.com/questions/38524942/guava-table-to-csv
-          * The table variable was changed
-          */
-         CSVPrinter printer = new CSVPrinter(writer, CSVFormat.DEFAULT);
-         printer.printRecords(t.rowMap().values().stream().map(x -> x.values()).collect(Collectors.toList()));
-         // End of code reference
-         printer.flush();
-         writer.close();
+      try {   	  
+          // Ensure the /data folder exists before writing
+          File dataFolder = new File("data");
+          if (!dataFolder.exists()) {
+        	  dataFolder.mkdirs(); // create the folder
+          }
+          /*
+           * Below code was adapted and altered from the question on this website:
+           * https://stackoverflow.com/questions/38524942/guava-table-to-csv
+           * The table variable was changed.
+           */
+          try (
+             BufferedWriter writer = new BufferedWriter(new FileWriter("data/" + name + ".csv"));
+             CSVPrinter printer = new CSVPrinter(writer, CSVFormat.DEFAULT)
+          ) {
+             printer.printRecords(t.rowMap().values().stream().map(x -> x.values()).collect(Collectors.toList()));
+          }
       } catch (Exception e) {
          e.printStackTrace();
       }
@@ -462,9 +463,6 @@ public class Generator {
             double min = Double.parseDouble(input.get(9, inputIdx));
             double max = Double.parseDouble(input.get(8, inputIdx));
             double avg = min + (max - min) / 2;
-            double noise = Double.parseDouble(input.get(6, inputIdx));
-            double sinePeriod = Double.parseDouble(input.get(10, inputIdx));
-            double amplitude = Double.parseDouble(input.get(11, inputIdx));
             double mvLag = Double.parseDouble(input.get(7, inputIdx));
             double stepSize;
             if (isolatedMoves != 0)
@@ -616,30 +614,6 @@ public class Generator {
    }
 
    /*
-    * stateSetup: Method for calculating a given state column given its input
-    * column and state table column
-    * This method condenses the first three set of loops in
-    * 'CalcStateVariables.bas' from the client's code (available on the Additional
-    * materials section on Moodle)
-    * This was moved and adapted to a separate method by myself for efficiency
-    * improvements
-    */
-   private void stateSetup(int col, int inCol, int stateCol) {
-      // Since the calculations were specific, the values could be hard-coded
-      double intercept = 1000;
-      double asymptote = 300;
-      double slope = 0.5;
-      // This block of code contains parameter values to make the algorithm generic
-      double noise = Double.parseDouble(state.get(6, col));
-      for (int i = 3; i <= finalRow; i++) {
-         double noiseVal = calcNoise(noise);
-         double inputVal = Double.parseDouble(data.get(i, inCol));
-         double val = intercept - (intercept - asymptote) * (1 - 1 / Math.exp(slope * inputVal)) + noiseVal;
-         data.put(i, stateCol, String.valueOf(val));
-      }
-   }
-
-   /*
     * calcState: Method that is translated and adapted from
     * 'CalcStateVariables.bas' from the client's code available (available on the
     * Additional materials section on Moodle)
@@ -757,10 +731,6 @@ public class Generator {
     * removed by myself)
     */
    public void calcStateDyn() {
-      TableHeaders.QcsDynColumnNames cols = qcsDynColumns != null
-            ? qcsDynColumns
-            : TableHeaders.resolveQcsDynColumns(input, state, data, numInputs, numState, lastInputCol);
-
       CalcStateDyn qcs = new CalcStateDyn(
             data,
             state,
@@ -863,7 +833,7 @@ public class Generator {
          double weight = Double.parseDouble(labOutputs.get(name).get(i, 2));
          String asymptote = labOutputs.get(name).get(i, 3);
          String order = labOutputs.get(name).get(i, 4);
-         String slope = labOutputs.get(name).get(i, 5);
+         String slope = labOutputs.get(name).get(i, 5);      
          double model = Double.parseDouble(labOutputs.get(name).get(i, 6));
          double direction = Double.parseDouble(labOutputs.get(name).get(i, 7));
          double shape = Double.parseDouble(labOutputs.get(name).get(i, 8));
