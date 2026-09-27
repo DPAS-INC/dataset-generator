@@ -771,7 +771,6 @@ public class Generator {
       int lastLab = lastInputCol + numOutputs;
       int firstLab = lastInputCol + 1;
       int stateRow = numInputs + 2;
-      
       /*
        * The client made a change where the lab rows can be created only if needed
        * instead of removing everything at createDataset()
