@@ -3765,20 +3765,19 @@ public class Form extends javax.swing.JFrame {
             folderChooser.setDialogTitle("Select Config Folder");
             folderChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
             folderChooser.setAcceptAllFileFilterUsed(false);
+            folderChooser.setCurrentDirectory(AppPaths.configDirectory());
             int result = folderChooser.showOpenDialog(this);
             if (result == JFileChooser.APPROVE_OPTION) {
                   File selectedFolder = folderChooser.getSelectedFile();
                   // Extract only the folder name.
-                  File configDir = new File("config").getAbsoluteFile();
-                  Path configPath = configDir.toPath();
-                  Path selectedPath = selectedFolder.toPath();
+                  Path configPath = AppPaths.configDirectory().toPath().toAbsolutePath().normalize();
+                  Path selectedPath = selectedFolder.toPath().toAbsolutePath().normalize();
                   String folderName;
-                  try {
-                        folderName = configPath.relativize(selectedPath).toString();
-                  } catch (IllegalArgumentException e) {
+                  if (!selectedPath.startsWith(configPath)) {
                         loadMessageLabel.setText("Folder must be inside 'config'");
                         return;
                   }
+                  folderName = configPath.relativize(selectedPath).toString();
                   // Update the text field
                   loadField.setText(folderName);
                   loadMessageLabel.setText("Selected folder: " + folderName);
@@ -3965,9 +3964,9 @@ public class Form extends javax.swing.JFrame {
             }
 
             List<File> candidates = new ArrayList<>();
-            File typedPath = new File(folderText);
+            File typedPath = AppPaths.resolveAgainstBase(folderText);
             candidates.add(typedPath);
-            candidates.add(new File("config", folderText));
+            candidates.add(new File(AppPaths.configDirectory(), folderText));
 
             for (File candidate : candidates) {
                   File canonical = candidate.getCanonicalFile();
@@ -5346,7 +5345,7 @@ public class Form extends javax.swing.JFrame {
                         infoLabel.setText("Please enter a folder name");
                         return;
                   }
-                  File file = new File(folderName);
+                  File file = AppPaths.resolveAgainstBase(folderName);
                   if (!file.exists()) {
                         if (!file.mkdirs()) {
                               infoLabel.setText("Could not create folder");
@@ -5363,8 +5362,9 @@ public class Form extends javax.swing.JFrame {
       // write: Method for writing to a CSV file given the data table and file name
       public void write(Table<Integer, Integer, String> table, String name) {
             try {
+                  File downloadFolder = AppPaths.resolveAgainstBase(downloadField.getText().trim());
                   BufferedWriter writer = new BufferedWriter(
-                              new FileWriter(new File(downloadField.getText().trim(), name + ".csv")));
+                              new FileWriter(new File(downloadFolder, name + ".csv")));
                   /*
                    * Below code was adapted from the question in this website:
                    * https://stackoverflow.com/questions/38524942/guava-table-to-csv

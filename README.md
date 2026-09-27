@@ -1,30 +1,72 @@
-# dataset-generator
+# Dataset Generator
 
-Welcome to the Dataset Generator open-source project authored by Pat Dixon, Alia Rezvi, Mohammed Almakki, Grace Mower, Zaid Taiyab, Deepak Dalai, (DPAS Inc), 2025.
+Dataset Generator is a Java desktop application for creating simulated process datasets. The project was authored by Pat Dixon, Alia Rezvi, Mohammed Almakki, Grace Mower, Zaid Taiyab, Deepak Dalai, and DPAS Inc.
 
-Please read the 'Documentation.pdf' file for an introduction and instructions on how to run/modify the application.
+## Requirements
 
-The 'generator' directory holds the application and all external library licenses/notices can be found in the 'generator\main\libraries' directory.
+- Java Development Kit (JDK) 17
+- Apache Maven 3.9 or newer
 
-The 'documents' directory holds relevant information about the current dataset generator's variables and calculations.
+## Quick start
 
-The 'NetBeans.zip' file is an older, modified version of the project which allows for GUI configuration using the NetBeans GUI editor. Details can be found in the 'Documentation.pdf' file.
+From the repository root:
 
----
+```bash
+cd generator/main
+mvn clean package
+java -Xmx6144m -jar target/dataset-generator.jar
+```
 
-## Memory Usage Configuration
+Windows users can instead run:
 
-The Dataset Generator can be run using different methods depending on the amount of memory required. By default, the application uses approximately **2–4 GB of memory**, but higher limits can be specified for larger datasets.
+```powershell
+cd generator/main
+.\run.bat
+```
 
-| Method | Memory Used |
-|------|------------|
-| Double-click `generator.jar` | Default (~2–4 GB) |
-| `java -jar generator.jar` | Default (~2–4 GB) |
-| `java -Xmx8192m -jar generator.jar` | 8 GB |
-| `java -Xmx12288m -jar generator.jar` | 12 GB |
-| `java -Xmx16384m -jar generator.jar` | 16 GB |
+macOS and Linux users can run:
 
-### Notes
-- Use higher memory limits for large dataset generation.
-- Ensure your system has enough available RAM before assigning higher values.
-- The `-Xmx` flag sets the maximum JVM heap size.
+```bash
+cd generator/main
+./run.sh
+```
+
+The Maven build works from the command line and can be imported by VS Code, Eclipse, or IntelliJ IDEA.
+
+See [Building and Running](documents/BUILDING_AND_RUNNING.md) for complete operating-system and IDE instructions.
+
+## Project structure
+
+- `generator/main/src` — Java source code
+- `generator/main/config` — sample input configurations
+- `generator/main/data` — generated datasets; ignored by Git
+- `generator/main/libraries` — legacy dependency copies and license notices
+- `documents` — application, variable, and calculation documentation
+
+The Maven build creates the executable application at:
+
+```text
+generator/main/target/dataset-generator.jar
+```
+
+Older versioned JAR files remain in the repository for historical reference. New source builds should use the JAR produced in `target/`.
+
+## Memory configuration
+
+The launch scripts use a 6 GB maximum Java heap. To select a different limit, run the JAR directly:
+
+```bash
+java -Xmx8192m -jar target/dataset-generator.jar
+```
+
+Common values include:
+
+| Option | Maximum heap |
+| --- | ---: |
+| `-Xmx4096m` | 4 GB |
+| `-Xmx6144m` | 6 GB |
+| `-Xmx8192m` | 8 GB |
+| `-Xmx12288m` | 12 GB |
+| `-Xmx16384m` | 16 GB |
+
+Do not assign more memory than the computer can safely provide.
