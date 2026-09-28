@@ -268,11 +268,11 @@ public class Generator {
          t = data;
       try {
          // Ensure the /data folder exists before writing
-         File dataFolder = AppPaths.dataDirectory();
+         File dataFolder = new File("data");
          if (!dataFolder.exists()) {
             dataFolder.mkdirs(); // create the folder
          }
-         BufferedWriter writer = new BufferedWriter(new FileWriter(new File(dataFolder, name + ".csv")));
+         BufferedWriter writer = new BufferedWriter(new FileWriter("data/" + name + ".csv"));
          /*
           * Below code was adapted from the question in this website:
           * https://stackoverflow.com/questions/38524942/guava-table-to-csv
@@ -303,7 +303,7 @@ public class Generator {
           */
          // A File object was used instead of a String from the answer, the path was also
          // changed
-         File file = new File(AppPaths.dataDirectory(), "data.csv");
+         File file = new File("data/data.csv");
          // The same list variable was used, but renamed by myself
          List<String[]> csv = new ArrayList<>();
          // The BufferedReader line was re-arranged

@@ -95,6 +95,7 @@ chmod +x run.sh
 4. Allow the Java extensions to import `pom.xml` and finish downloading dependencies.
 5. Open `src/generator/Main.java`.
 6. Select **Run Java** above the `main` method, or run `mvn clean package` in the integrated terminal.
+7. Keep `generator/main` as the workspace and working directory so the application can find `config/` and write `data/`.
 
 VS Code automatically detects Maven projects containing a `pom.xml`. See the official [Java build tools in VS Code](https://code.visualstudio.com/docs/java/java-build) documentation for Maven Explorer details.
 
@@ -108,6 +109,7 @@ VS Code automatically detects Maven projects containing a `pom.xml`. See the off
 6. Wait for dependency resolution to complete.
 7. Open `src/generator/Main.java`.
 8. Select **Run As > Java Application**.
+9. In the run configuration, keep the project directory (`generator/main`) as the working directory.
 
 Maven's `pom.xml` is the authoritative build configuration. The existing Eclipse `.project` and `.classpath` files are retained for compatibility but should not replace the Maven dependency configuration.
 
@@ -120,39 +122,22 @@ Maven's `pom.xml` is the authoritative build configuration. The existing Eclipse
 5. Set the project SDK to JDK 17.
 6. Wait for Maven synchronization to finish.
 7. Open `src/generator/Main.java` and run `generator.Main`.
+8. In the run configuration, set the working directory to the Maven project directory (`generator/main`).
 
 JetBrains also documents this process in its [Maven project import guide](https://www.jetbrains.com/guide/java/tutorials/working-with-maven/importing-a-project/).
 
 ## Configuration and output locations
 
-The application resolves its home directory consistently even if an IDE supplies a different working directory.
-
-Default locations are:
+The application uses paths relative to its working directory. Run it with `generator/main` as the working directory so these locations remain consistent:
 
 ```text
 generator/main/config   Sample configuration folders
 generator/main/data     Generated dataset files
 ```
 
-The configuration folder chooser only accepts folders located inside `generator/main/config`.
+The Windows and macOS/Linux launch scripts automatically switch to `generator/main` before building and launching the application. When running directly from an IDE, configure the IDE's working directory as described above.
 
-Relative paths entered when downloading configurations are resolved from `generator/main`. Absolute paths remain absolute.
-
-For a nonstandard installation, explicitly set the application home before `-jar`:
-
-### Windows PowerShell
-
-```powershell
-java '-Ddataset.generator.home=C:\path\to\generator\main' -Xmx6144m -jar target\dataset-generator.jar
-```
-
-### macOS and Linux
-
-```bash
-java -Ddataset.generator.home=/path/to/generator/main -Xmx6144m -jar target/dataset-generator.jar
-```
-
-The selected directory should contain the `config` folder. The application creates `data` when generation starts if it does not already exist.
+This working-directory requirement preserves the existing generic Java behavior and avoids adding operating-system-specific logic to the application.
 
 ## Memory settings
 
