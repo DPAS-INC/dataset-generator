@@ -255,39 +255,42 @@ public class Generator {
     * This was not required in VB as tables in Excel were directly written to
     */
    private void write(boolean table, String name) {
-      Table<Integer, Integer, String> t;
-      if (!table) {
-         t = TreeBasedTable.create();
-         for (int i = 1; i <= finalRow; i++) {
-            // When writing to the temporary dataset, not all columns are written to save
-            // memory
-            for (int j = 1; j < firstVal; j++) {
-               t.put(i, j, data.get(i, j));
-            }
-         }
-      } else
-         t = data;
-      try {   	  
-          // Ensure the /data folder exists before writing
-          File dataFolder = new File("data");
-          if (!dataFolder.exists()) {
-        	  dataFolder.mkdirs(); // create the folder
-          }
-          /*
-           * Below code was adapted and altered from the question on this website:
-           * https://stackoverflow.com/questions/38524942/guava-table-to-csv
-           * The table variable was changed.
-           */
-          try (
-             BufferedWriter writer = new BufferedWriter(new FileWriter("data/" + name + ".csv"));
-             CSVPrinter printer = new CSVPrinter(writer, CSVFormat.DEFAULT)
-          ) {
-             printer.printRecords(t.rowMap().values().stream().map(x -> x.values()).collect(Collectors.toList()));
-          }
-      } catch (Exception e) {
-         e.printStackTrace();
-      }
-   }
+	   try {
+		  // Ensure the output directory exists before creating the CSV file
+	      File dataFolder = new File("data");
+	      if (!dataFolder.exists()) {
+	         dataFolder.mkdirs();
+	      }
+
+	      // Try-with-resources ensures both the writer and CSV printer are closed properly
+	      try (
+	         BufferedWriter writer = new BufferedWriter(new FileWriter("data/" + name + ".csv"));
+	         CSVPrinter printer = new CSVPrinter(writer, CSVFormat.DEFAULT)
+	      ) {
+	         if (!table) {
+	        	 /*
+	              * When writing the temporary dataset, only the required columns are written.
+	              * Rows are written directly from the main data table instead of creating a
+	              * second TreeBasedTable, which reduces peak memory usage.
+	              */
+	            for (int i = 1; i <= finalRow; i++) {
+	               List<String> row = new ArrayList<>();
+
+	               for (int j = 1; j < firstVal; j++) {
+	                  row.add(data.get(i, j));
+	               }
+
+	               printer.printRecord(row);
+	            }
+	         } else {
+	        	// The complete dataset can be written directly once generation is finished
+	            printer.printRecords(data.rowMap().values().stream().map(x -> x.values()).collect(Collectors.toList()));
+	         }
+	      }
+	   } catch (Exception e) {
+	      e.printStackTrace();
+	   }
+	}
 
    /*
     * read: Method for reading the temporary CSV file into a data table given the
