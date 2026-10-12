@@ -2,6 +2,8 @@
 
 This guide describes one consistent Maven workflow for Windows, macOS, Linux, VS Code, Eclipse, IntelliJ IDEA, and the command line.
 
+For the warning baseline, investigation, fixes, and regression-test results, see [Program Warning Investigation](WARNING_INVESTIGATION.md).
+
 ## Requirements
 
 Install the following tools:
