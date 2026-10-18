@@ -5156,47 +5156,6 @@ public class Form extends javax.swing.JFrame {
                   list.add(input.get(1, i));
             }
             list.addAll(TableHeaders.stateVariableNames(state));
-            // The array below contains hard-coded variables in 'Generator.java' that must
-            // be present
-            // Below data labels form part of the DG-2 and DG-4 requirements (from Appendix
-            // D - Requirements of the Project Report)
-
-            /*
-             * 2/23/26 all of this is for hard coded state variables, removed for generic
-             * code
-             * String[] variables = { "MV_SWFreeness", "MV_HWFreeness", "MV_OCCFreeness",
-             * "MV_HeadboxPressure",
-             * "MV_SliceOpening",
-             * "MV_MachineSpeed", "MV_SWSpecificEnergy", "MV_HWSpecificEnergy",
-             * "MV_OCCSpecificEnergy", "MV_SWPct",
-             * "MV_HWPct", "MV_OCCPct", "PulpEye_BlendFreeness", "PulpEye_BlendCrill",
-             * "QCS_BoneDryWeight", "QCS_BasisWeight", "QCS_Moisture", "QCS_Caliper",
-             * "MV_WireSpeed", "MV_SWFlow",
-             * "MV_HWFlow", "MV_OCCFlow", "MV_ThinStockConsistency", "MV_ThinStockFlow",
-             * "MV_PressLoad",
-             * "MV_SteamPressure",
-             * "MV_JettoWire", "PulpEye_SWCrill", "PulpEye_HWCrill", "PulpEye_OCCCrill" };
-             * listTextArea.setText("");
-             * listTextArea.setVisible(true);
-             */
-
-            /*
-             * Below code was adapted from the first answer in this website:
-             * https://stackoverflow.com/questions/20755432/how-to-check-if-an-arraylist-
-             * contain-2-values
-             * The variables and boolean condition were changed
-             */
-
-            /*
-             * 2/23/26 all of this is for hard coded state variables, removed for generic
-             * code
-             * for (String var : variables) {
-             * if (!list.contains(var)) {
-             * // End of code reference
-             * listTextArea.append(var + "\n");
-             * }
-             * }
-             */
 
             if (listTextArea.getText().isEmpty()) {
                   // Generation can start

@@ -77,9 +77,6 @@ public class Generator {
    int firstVal;
    // dynRow: The final row before dynamics are applied
    int dynRow;
-   // Resolved QCS / thin-stock column headers (from input + state + data row 1,
-   // not literals)
-   private TableHeaders.QcsDynColumnNames qcsDynColumns;
 
    // This constructor initialises all variables and applies some calculation from
    // the client's Excel tool (available on OneDrive) and some of the client's code
@@ -585,14 +582,12 @@ public class Generator {
          data.put(i, 1, "");
       }
 
-      // List is used to note essential variables
+      // Preserve inputs required by lab and application-specific state calculations
       List<Integer> inputNames = new ArrayList<>();
       calcList(inputNames, numInputs, input);
-      qcsDynColumns = TableHeaders.resolveQcsDynColumns(input, state, data, numInputs, numState, lastInputCol);
-      addInputColumnIfPresent(inputNames, qcsDynColumns.thinStockFlowInput());
-      addInputColumnIfPresent(inputNames, qcsDynColumns.thinStockConsistencyInput());
-      addInputColumnIfPresent(inputNames, qcsDynColumns.pressLoadInput());
-      addInputColumnIfPresent(inputNames, qcsDynColumns.steamPressureInput());
+      for (String name : CalcStateDyn.REQUIRED_INPUTS) {
+          addInputColumnIfPresent(inputNames, name);
+      }
       /*
        * Below code was adapted from this website:
        * https://www.freecodecamp.org/news/how-to-sort-a-list-in-java/
