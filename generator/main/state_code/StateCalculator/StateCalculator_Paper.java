@@ -3,10 +3,29 @@ package generator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.List;
 
 import com.google.common.collect.Table;
 
 public class StateCalculator {
+	// State variables required by the Paper-specific calculations
+	public static final List<String> REQUIRED_STATES = List.of(
+	      "MV_SWFreeness",
+	      "MV_HWFreeness",
+	      "MV_OCCFreeness",
+	      "MV_SWPct",
+	      "MV_HWPct",
+	      "MV_OCCPct",
+	      "MV_HeadboxPressure",
+	      "MV_SliceOpening",
+	      "MV_MachineSpeed",
+	      "QCS_BoneDryWeight",
+	      "QCS_BasisWeight",
+	      "QCS_Moisture",
+	      "QCS_Caliper",
+	      "PulpEye_BlendFreeness",
+	      "PulpEye_BlendCrill"
+   );
    private final Table<Integer, Integer, String> data;
    private final Table<Integer, Integer, String> state;
    private final int finalRow;

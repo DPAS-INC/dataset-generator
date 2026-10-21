@@ -5150,12 +5150,38 @@ public class Form extends javax.swing.JFrame {
       private void genButtonActionPerformed() {
             progressLabel.setVisible(false);
             loadBar.setVisible(false);
-            List<String> list = new ArrayList<>();
+            // Collect available variables from the selected configurations
+            List<String> availableVariables = new ArrayList<>();
 
             for (int i = 2; i <= input.columnKeySet().size(); i++) {
-                  list.add(input.get(1, i));
+                availableVariables.add(input.get(1, i));
             }
-            list.addAll(TableHeaders.stateVariableNames(state));
+            availableVariables.addAll(TableHeaders.stateVariableNames(state));
+            
+            // Clear previous validation results
+            listTextArea.setText("");
+            
+            // Check state variables required by the selected application
+            List<String> configuredStates = TableHeaders.stateVariableNames(state);
+
+            for (String requiredState : StateCalculator.REQUIRED_STATES) {
+                if (!configuredStates.contains(requiredState)) {
+                    listTextArea.append("Missing required state variable: " + requiredState + "\n");
+                }
+            }
+
+            // Check that all lab variables exist in the input or state configuration
+            for (String outputName : labOutputs.keySet()) {
+                Table<Integer, Integer, String> lab = labOutputs.get(outputName);
+
+                for (int row = 2; row <= lab.rowKeySet().size(); row++) {
+                    String variable = lab.get(row, 1);
+
+                    if (variable == null || !availableVariables.contains(variable)) {
+                        listTextArea.append("Missing variable: " + variable + "\n");
+                    }
+                }
+            }
 
             if (listTextArea.getText().isEmpty()) {
                   // Generation can start
@@ -5170,8 +5196,10 @@ public class Form extends javax.swing.JFrame {
                   generating = true;
                   run(start);
                   infoLabel.setText("");
-            } else
-                  infoLabel.setText("The following variables are missing from inputs and state");
+            } else {
+                listTextArea.setVisible(true);
+                infoLabel.setText("The following variables are missing from inputs and state");
+            }
       }
 
       // run: Method that generates the dataset taking in the start time as a
