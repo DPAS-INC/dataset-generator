@@ -25,11 +25,18 @@
             <artifactId>commons-csv</artifactId>
             <version>1.10.0</version>
         </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>5.11.4</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
         <!-- Preserve the repository's existing source layout. -->
         <sourceDirectory>src</sourceDirectory>
+        <testSourceDirectory>test</testSourceDirectory>
         <finalName>dataset-generator</finalName>
 
         <plugins>
