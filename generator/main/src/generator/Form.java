@@ -5400,53 +5400,38 @@ public class Form extends javax.swing.JFrame {
       private void genButtonActionPerformed() {
             progressLabel.setVisible(false);
             loadBar.setVisible(false);
-            List<String> list = new ArrayList<>();
+            // Collect available variables from the selected configurations
+            List<String> availableVariables = new ArrayList<>();
 
             for (int i = 2; i <= input.columnKeySet().size(); i++) {
-                  list.add(input.get(1, i));
+                availableVariables.add(input.get(1, i));
             }
-            list.addAll(TableHeaders.stateVariableNames(state));
-            // The array below contains hard-coded variables in 'Generator.java' that must
-            // be present
-            // Below data labels form part of the DG-2 and DG-4 requirements (from Appendix
-            // D - Requirements of the Project Report)
+            availableVariables.addAll(TableHeaders.stateVariableNames(state));
+            
+            // Clear previous validation results
+            listTextArea.setText("");
+            
+            // Check state variables required by the selected application
+            List<String> configuredStates = TableHeaders.stateVariableNames(state);
 
-            /*
-             * 2/23/26 all of this is for hard coded state variables, removed for generic
-             * code
-             * String[] variables = { "MV_SWFreeness", "MV_HWFreeness", "MV_OCCFreeness",
-             * "MV_HeadboxPressure",
-             * "MV_SliceOpening",
-             * "MV_MachineSpeed", "MV_SWSpecificEnergy", "MV_HWSpecificEnergy",
-             * "MV_OCCSpecificEnergy", "MV_SWPct",
-             * "MV_HWPct", "MV_OCCPct", "PulpEye_BlendFreeness", "PulpEye_BlendCrill",
-             * "QCS_BoneDryWeight", "QCS_BasisWeight", "QCS_Moisture", "QCS_Caliper",
-             * "MV_WireSpeed", "MV_SWFlow",
-             * "MV_HWFlow", "MV_OCCFlow", "MV_ThinStockConsistency", "MV_ThinStockFlow",
-             * "MV_PressLoad",
-             * "MV_SteamPressure",
-             * "MV_JettoWire", "PulpEye_SWCrill", "PulpEye_HWCrill", "PulpEye_OCCCrill" };
-             * listTextArea.setText("");
-             * listTextArea.setVisible(true);
-             */
+            for (String requiredState : StateCalculator.REQUIRED_STATES) {
+                if (!configuredStates.contains(requiredState)) {
+                    listTextArea.append("Missing required state variable: " + requiredState + "\n");
+                }
+            }
 
-            /*
-             * Below code was adapted from the first answer in this website:
-             * https://stackoverflow.com/questions/20755432/how-to-check-if-an-arraylist-
-             * contain-2-values
-             * The variables and boolean condition were changed
-             */
+            // Check that all lab variables exist in the input or state configuration
+            for (String outputName : labOutputs.keySet()) {
+                Table<Integer, Integer, String> lab = labOutputs.get(outputName);
 
-            /*
-             * 2/23/26 all of this is for hard coded state variables, removed for generic
-             * code
-             * for (String var : variables) {
-             * if (!list.contains(var)) {
-             * // End of code reference
-             * listTextArea.append(var + "\n");
-             * }
-             * }
-             */
+                for (int row = 2; row <= lab.rowKeySet().size(); row++) {
+                    String variable = lab.get(row, 1);
+
+                    if (variable == null || !availableVariables.contains(variable)) {
+                        listTextArea.append("Missing variable: " + variable + "\n");
+                    }
+                }
+            }
 
             if (listTextArea.getText().isEmpty()) {
                   // Generation can start
@@ -5461,8 +5446,10 @@ public class Form extends javax.swing.JFrame {
                   generating = true;
                   run(start);
                   infoLabel.setText("");
-            } else
-                  infoLabel.setText("The following variables are missing from inputs and state");
+            } else {
+                listTextArea.setVisible(true);
+                infoLabel.setText("The following variables are missing from inputs and state");
+            }
       }
 
       // run: Method that generates the dataset taking in the start time as a
