@@ -100,3 +100,11 @@ Messages such as `skip non existing resourceDirectory`, `No sources to compile`,
 All warnings identified in the current team code were investigated and resolved. No unresolved compiler, packaging, startup, runtime, or VS Code warnings remain from this investigation.
 
 The repository does not currently contain automated test sources, so regression coverage consisted of clean and strict builds, artifact inspection, application launch, NoState dataset generation, CSV structural validation, and VS Code verification.
+
+## Follow-up: Eclipse export compiler warnings
+
+On October 24, 2026, an Eclipse Runnable JAR export reported compile warnings in `Form.java`, `OutputShapeEditorPanel.java`, `TableHeaders.java`, `StateCalculator.java`, and `CalcStateDyn.java`. These are Java source diagnostics, separate from the Maven Shade resource warnings resolved above.
+
+Workspace diagnostics identified unused private helpers and fields in `StateCalculator` and `CalcStateDyn`, an unused preview callback and redundant `@SuppressWarnings` in `Form`, and a raw `List` parameter in the `SwingWorker` callback. The unused code and callback were removed, the unnecessary suppression was deleted, and the list parameter was changed to `List<String>`. Existing public constructor signatures and active UI behavior were preserved. No diagnostics were reported for `OutputShapeEditorPanel.java` or `TableHeaders.java` in the current workspace.
+
+After the cleanup, workspace diagnostics reported no errors. A clean Maven package with strict `-Xlint:all` compilation completed successfully, with all three tests passing and no Maven warnings. Eclipse's export dialog itself was not available in this environment, so the result was verified using current workspace diagnostics and Maven rather than repeating that IDE-specific export.

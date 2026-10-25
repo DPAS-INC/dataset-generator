@@ -431,7 +431,6 @@ public class Form extends javax.swing.JFrame {
        * The positioning, appearance, and contents of the components in the following
        * code were entered/positioned manually by myself in the GUI builder
        */
-      @SuppressWarnings("unchecked")
       // <editor-fold defaultstate="collapsed" desc="Generated Code">
       private void initComponents() {
 
@@ -5057,54 +5056,6 @@ public class Form extends javax.swing.JFrame {
       }
 
       /*
-       * previewShapeButtonActionPerformed: Opens the Output Shape Editor in a dialog,
-       * pre-populated with the current Lab Configuration field values so the user can
-       * visually preview and experiment with gain curve shapes before adding a row.
-       */
-      private void previewShapeButtonActionPerformed() {
-            // Parse current field values safely, falling back to defaults on any error
-            int modelIdx = modelBox.getSelectedIndex();
-            int orderIdx = orderBox.getSelectedIndex();
-            int shapeIdx = shapeBox.getSelectedIndex();
-            int directionIdx = directionBox.getSelectedIndex();
-            String asymptote = labAsymptoteField.getText().trim();
-            String slope = labSlopeField.getText().trim();
-
-            // Determine output min/max from the currently selected output variable
-            String outMin = "";
-            String outMax = "";
-            if (outputBox.getSelectedItem() != null) {
-                  String selected = outputBox.getSelectedItem().toString();
-                  for (int i = 2; i <= output.columnKeySet().size(); i++) {
-                        if (output.get(1, i) != null && output.get(1, i).equals(selected)) {
-                              // row 5 = Min, row 4 = Max (as stored by outputSubmitButtonActionPerformed)
-                              outMin = output.get(5, i) != null ? output.get(5, i) : "";
-                              outMax = output.get(4, i) != null ? output.get(4, i) : "";
-                              break;
-                        }
-                  }
-            }
-
-            // Build the panel using the parameterized constructor
-            OutputShapeEditorPanel editorPanel = new OutputShapeEditorPanel(
-                        modelIdx, orderIdx + 1, shapeIdx, directionIdx,
-                        asymptote, slope, outMin, outMax);
-
-            // Wrap in a resizable modal dialog sized to 90% of the screen
-            javax.swing.JDialog shapeDialog = new javax.swing.JDialog(this, "Output Shape Editor — Preview", true);
-            shapeDialog.setDefaultCloseOperation(javax.swing.JDialog.DISPOSE_ON_CLOSE);
-            shapeDialog.setContentPane(editorPanel);
-            shapeDialog.setResizable(true);
-            java.awt.Dimension screen = java.awt.Toolkit.getDefaultToolkit().getScreenSize();
-            int dlgW = (int) (screen.width * 0.90);
-            int dlgH = (int) (screen.height * 0.90);
-            shapeDialog.setSize(dlgW, dlgH);
-            shapeDialog.setMinimumSize(new java.awt.Dimension(900, 620));
-            shapeDialog.setLocationRelativeTo(this);
-            shapeDialog.setVisible(true);
-      }
-
-      /*
        * openShapeEditorForRow: Opens the Output Shape Editor pre-populated with
        * a specific lab table row's values. When the user clicks "Apply & Close",
        * the modified Asymptote, Order, Slope, Model, Direction and Shape values
@@ -5516,7 +5467,7 @@ public class Form extends javax.swing.JFrame {
                         // process: Method that performs updates with a value passed on from the
                         // publish() method in doInBackground()
                         @Override
-                        protected void process(List s) {
+                        protected void process(List<String> s) {
                               // The 's.size() - 1' part only was adapted from the tutorial, the rest was
                               // written by myself
                               progressLabel.setText(s.get(s.size() - 1).toString());
