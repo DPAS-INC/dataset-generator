@@ -2,6 +2,7 @@ package generator;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.List;
 
 import com.google.common.collect.Table;
 
@@ -11,6 +12,18 @@ public class CalcStateDyn {
     public interface DynamicValueFunction {
         void apply(int row, int col, boolean isInput);
     }
+
+
+    private final Table<Integer, Integer, String> data;
+    private final Table<Integer, Integer, String> state;
+    private final Table<Integer, Integer, String> input;
+    private final Table<Integer, Integer, String> dyn;
+    private final int finalRow;
+    private final int lastInputCol;
+    private final int firstVal;
+    private final int dynRow;
+    private final DynamicValueFunction dynamicValues;
+    public static final List<String> REQUIRED_INPUTS = List.of();
 
     public static final Map<String, Double> PROCESS_VARIABLES = new HashMap<>();
 
