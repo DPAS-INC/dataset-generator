@@ -2,11 +2,7 @@ package generator;
 
 // Remaining Java internal library classes
 import java.awt.Color;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.time.LocalDate;
@@ -22,7 +18,6 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
-import java.util.stream.Collectors;
 
 import javax.swing.DefaultCellEditor;
 import javax.swing.JComboBox;
@@ -34,9 +29,6 @@ import javax.swing.SwingWorker;
 import javax.swing.table.DefaultTableModel;
 
 // Apache Commons CSV external library classes
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVPrinter;
-
 // Google Guava external library classes
 import com.google.common.collect.Table;
 import com.google.common.collect.TreeBasedTable;
@@ -314,6 +306,16 @@ public class Form extends javax.swing.JFrame {
       private boolean generating;
       // loaded: Has the data been loaded?
       private boolean loaded;
+      // Track the visible page and pages whose editable configuration has changed.
+      // A changed page is validated and saved automatically before navigation.
+      private JPanel currentPage;
+      private boolean processDirty;
+      private boolean processDescDirty;
+      private boolean inputDirty;
+      private boolean validationDirty;
+      private boolean stateDirty;
+      private boolean outputDirty;
+      private boolean labDirty;
 
       /*
        * This constructor initialises the components and variables of the class
@@ -410,6 +412,8 @@ public class Form extends javax.swing.JFrame {
             loaded = false;
             valCount = 1;
             orderCount = 0;
+            currentPage = homePage;
+            installChangeTracking();
             // Hide Trim and Draw fields completely
             trimLabel.setVisible(false);
             trimField.setVisible(false);
@@ -427,7 +431,6 @@ public class Form extends javax.swing.JFrame {
        * The positioning, appearance, and contents of the components in the following
        * code were entered/positioned manually by myself in the GUI builder
        */
-      @SuppressWarnings("unchecked")
       // <editor-fold defaultstate="collapsed" desc="Generated Code">
       private void initComponents() {
 
@@ -3675,7 +3678,168 @@ public class Form extends javax.swing.JFrame {
             main.add(panel);
             main.repaint();
             main.revalidate();
+            currentPage = panel;
             // End of code reference
+      }
+
+      // Registers change listeners for the configuration values that are ultimately
+      // consumed by dataset generation. Values in the "Add row" fields remain in
+      // their Swing components automatically and do not become configuration data
+      // until the row is added.
+      private void installChangeTracking() {
+            javax.swing.event.DocumentListener processListener = new javax.swing.event.DocumentListener() {
+                  private void changed() {
+                        processDirty = true;
+                  }
+
+                  @Override
+                  public void insertUpdate(javax.swing.event.DocumentEvent e) {
+                        changed();
+                  }
+
+                  @Override
+                  public void removeUpdate(javax.swing.event.DocumentEvent e) {
+                        changed();
+                  }
+
+                  @Override
+                  public void changedUpdate(javax.swing.event.DocumentEvent e) {
+                        changed();
+                  }
+            };
+            javax.swing.JTextField[] processFields = { dateField, processField, qcsField, labField, pulpField,
+                        ucField, isolatedField, settleField, labOffsetField };
+            for (javax.swing.JTextField field : processFields) {
+                  field.getDocument().addDocumentListener(processListener);
+            }
+
+            processDescModel.addTableModelListener(e -> processDescDirty = true);
+            inModel.addTableModelListener(e -> inputDirty = true);
+            valModel.addTableModelListener(e -> validationDirty = true);
+            stateModel.addTableModelListener(e -> stateDirty = true);
+            outModel.addTableModelListener(e -> outputDirty = true);
+            labModel.addTableModelListener(e -> labDirty = true);
+      }
+
+      // Saves the page being left. Invalid edits remain visible and navigation is
+      // cancelled so the existing page-specific validation message can be corrected.
+      private boolean prepareNavigation(JPanel destination) {
+            if (currentPage == null || currentPage == destination)
+                  return true;
+
+            JTable activeTable = null;
+            if (currentPage == processDescConfig)
+                  activeTable = processDescTable;
+            else if (currentPage == inputConfig)
+                  activeTable = inputTable;
+            else if (currentPage == valConfig)
+                  activeTable = valTable;
+            else if (currentPage == stateConfig)
+                  activeTable = stateTable;
+            else if (currentPage == outputConfig)
+                  activeTable = outputTable;
+            else if (currentPage == labConfig)
+                  activeTable = labTable;
+            if (activeTable != null && activeTable.isEditing()
+                        && !activeTable.getCellEditor().stopCellEditing())
+                  return false;
+
+            if (currentPage == processConfig && processDirty) {
+                  submitProcessButtonActionPerformed();
+                  return !processDirty;
+            }
+            if (currentPage == processDescConfig && processDescDirty) {
+                  processDescSubmitButtonActionPerformed();
+                  return !processDescDirty;
+            }
+            if (currentPage == inputConfig && inputDirty) {
+                  inputSubmitButtonActionPerformed();
+                  return !inputDirty;
+            }
+            if (currentPage == valConfig && validationDirty) {
+                  valSubmitButtonActionPerformed();
+                  return !validationDirty;
+            }
+            if (currentPage == stateConfig && stateDirty) {
+                  if (stateModel.getRowCount() == 0) {
+                        state.clear();
+                        stateSet = false;
+                        stateDirty = false;
+                        return true;
+                  }
+                  stateSubmitButtonActionPerformed();
+                  return !stateDirty;
+            }
+            if (currentPage == outputConfig && outputDirty) {
+                  outputSubmitButtonActionPerformed();
+                  return !outputDirty;
+            }
+            if (currentPage == labConfig && labDirty) {
+                  labSubmitButtonActionPerformed();
+                  return !labDirty;
+            }
+            return true;
+      }
+
+      // Generation is the final validation boundary. Re-save every required page in
+      // dependency order, even if it was not recently visited, before exposing the
+      // generation controls.
+      private boolean validateAllConfigurations() {
+            processDirty = true;
+            submitProcessButtonActionPerformed();
+            if (processDirty) {
+                  display(processConfig);
+                  return false;
+            }
+
+            processDescDirty = true;
+            processDescSubmitButtonActionPerformed();
+            if (processDescDirty) {
+                  display(processDescConfig);
+                  return false;
+            }
+
+            inputDirty = true;
+            inputSubmitButtonActionPerformed();
+            if (inputDirty) {
+                  display(inputConfig);
+                  return false;
+            }
+
+            validationDirty = true;
+            valSubmitButtonActionPerformed();
+            if (validationDirty) {
+                  display(valConfig);
+                  return false;
+            }
+
+            // State variables are optional, but any rows that are present must be valid.
+            if (stateModel.getRowCount() > 0) {
+                  stateDirty = true;
+                  stateSubmitButtonActionPerformed();
+                  if (stateDirty) {
+                        display(stateConfig);
+                        return false;
+                  }
+            } else {
+                  state.clear();
+                  stateDirty = false;
+            }
+
+            outputDirty = true;
+            outputSubmitButtonActionPerformed();
+            if (outputDirty) {
+                  display(outputConfig);
+                  return false;
+            }
+
+            labDirty = true;
+            labSubmitButtonActionPerformed();
+            if (labDirty) {
+                  display(labConfig);
+                  return false;
+            }
+            return true;
       }
 
       // insert: Method that inserts a given data array into a given table model
@@ -3687,6 +3851,50 @@ public class Form extends javax.swing.JFrame {
              */
             model.insertRow(model.getRowCount(), data);
             // End of code reference
+      }
+
+      // Keeps validation columns aligned with the current input names while retaining
+      // validation values for inputs whose names did not change.
+      private void syncValidationColumns() {
+            int inputColumnCount = input.columnKeySet().size();
+            Object[] headers = new Object[inputColumnCount];
+            headers[0] = "Row";
+            for (int column = 2; column <= inputColumnCount; column++) {
+                  headers[column - 1] = input.get(1, column);
+            }
+
+            boolean alreadyAligned = valModel.getColumnCount() == headers.length;
+            if (alreadyAligned) {
+                  for (int column = 0; column < headers.length; column++) {
+                        if (!headers[column].toString().equals(valModel.getColumnName(column))) {
+                              alreadyAligned = false;
+                              break;
+                        }
+                  }
+            }
+            if (alreadyAligned) {
+                  valPrinted = true;
+                  return;
+            }
+
+            Object[][] values = new Object[valModel.getRowCount()][headers.length];
+            for (int row = 0; row < values.length; row++) {
+                  values[row][0] = row + 1;
+                  for (int column = 1; column < headers.length; column++) {
+                        values[row][column] = "";
+                        for (int oldColumn = 1; oldColumn < valModel.getColumnCount(); oldColumn++) {
+                              if (headers[column].toString().equals(valModel.getColumnName(oldColumn))) {
+                                    Object oldValue = valModel.getValueAt(row, oldColumn);
+                                    values[row][column] = oldValue == null ? "" : oldValue;
+                                    break;
+                              }
+                        }
+                  }
+            }
+            valModel.setDataVector(values, headers);
+            valCount = valModel.getRowCount() + 1;
+            valPrinted = true;
+            validationDirty = true;
       }
 
       // delete: Method that deletes a row from a given table and model
@@ -3737,6 +3945,8 @@ public class Form extends javax.swing.JFrame {
        * Method shell (not body) was auto-generated from the GUI builder
        */
       private void homeButtonActionPerformed() {
+            if (!prepareNavigation(homePage))
+                  return;
             display(homePage);
       }
 
@@ -3884,6 +4094,7 @@ public class Form extends javax.swing.JFrame {
                   }
                   output = tempOutput;
                   // Lab output tables require specific preparation
+                  labOutputs.clear();
                   for (int i = 2; i <= output.columnKeySet().size(); i++) {
                         Table<Integer, Integer, String> t = TreeBasedTable.create();
                         labOutputs.put(output.get(1, i), t);
@@ -3946,7 +4157,7 @@ public class Form extends javax.swing.JFrame {
                         }
                   }
                   if (!error) {
-                        loadStatusLabel.setText("Data prepared, please press submit on each page before generating");
+                        loadStatusLabel.setText("Data prepared; changes are saved automatically when navigating");
                         loaded = true;
                   }
 
@@ -3983,39 +4194,9 @@ public class Form extends javax.swing.JFrame {
       // and file name
       private void read(Table<Integer, Integer, String> table, String name) {
             try {
-                  /*
-                   * Below code was adapted from the first answer in this website:
-                   * https://stackoverflow.com/questions/42170837/how-to-read-a-csv-file-into-an-
-                   * array-list-in-java
-                   * Adapted lines are explained below
-                   */
                   File baseDir = resolveLoadFolder();
-
                   File file = new File(baseDir, name + ".csv");
-                  // The same list variable was used, but renamed by myself
-                  List<String[]> csv = new ArrayList<>();
-                  // The BufferedReader line was re-arranged
-                  BufferedReader br = new BufferedReader(new FileReader(file));
-                  // The line String didn't need to be initialised, so I removed the assignment
-                  String line;
-                  // The next three lines were re-used and the variable name for the list was
-                  // adapted
-                  while ((line = br.readLine()) != null) {
-                        csv.add(line.split(","));
-                  }
-                  // End of code reference
-                  br.close();
-                  int r = 0;
-                  int c = 0;
-                  for (String[] row : csv) {
-                        r++;
-                        for (String value : row) {
-                              c++;
-                              // Without the toString() call, the value would not be correct
-                              table.put(r, c, value.toString());
-                        }
-                        c = 0;
-                  }
+                  ConfigurationCsv.read(file, table);
             } catch (Exception e) {
                   loadMessageLabel.setText("Error, ensure a file named " + name + ".csv exists in the selected folder");
                   e.printStackTrace();
@@ -4028,6 +4209,8 @@ public class Form extends javax.swing.JFrame {
        * Method shell (not body) was auto-generated from the GUI builder
        */
       private void processButtonActionPerformed() {
+            if (!prepareNavigation(processConfig))
+                  return;
             display(processConfig);
       }
 
@@ -4104,14 +4287,16 @@ public class Form extends javax.swing.JFrame {
 
             // Applies validation checks
             if (date.isEmpty() || lab.isEmpty() || processPeriod.isEmpty() || pulp.isEmpty() || qcs.isEmpty() ||
-                        uc.isEmpty() || labOffset.isEmpty() || isolated.isEmpty()) {
+                        uc.isEmpty() || labOffset.isEmpty() || isolated.isEmpty() || settle.isEmpty()) {
                   processMessageLabel.setText("Fields cannot be empty");
             } else if (Ints.tryParse(lab) == null || Ints.tryParse(processPeriod) == null || Ints.tryParse(pulp) == null
                         || Ints.tryParse(qcs) == null || Ints.tryParse(uc) == null || Ints.tryParse(labOffset) == null
                         || Ints.tryParse(isolated) == null
                         || Ints.tryParse(settle) == null)
                   processMessageLabel.setText("Value fields must be whole numbers");
-            else if (Integer.parseInt(qcs) % Integer.parseInt(processPeriod) != 0) {
+            else if (Integer.parseInt(processPeriod) <= 0) {
+                  processMessageLabel.setText("Process period must be greater than zero");
+            } else if (Integer.parseInt(qcs) % Integer.parseInt(processPeriod) != 0) {
                   processMessageLabel.setText("Analyzer period is not a multiple of the Process period");
             } else if (Integer.parseInt(pulp) % Integer.parseInt(processPeriod) != 0) {
                   processMessageLabel.setText("Analyzer 2 Period is not a multiple of the Process period");
@@ -4147,6 +4332,7 @@ public class Form extends javax.swing.JFrame {
 
                   processMessageLabel.setText("Values submitted");
                   process = processVariables.get("Process");
+                  processDirty = false;
             }
       }
 
@@ -4156,7 +4342,10 @@ public class Form extends javax.swing.JFrame {
       private boolean checkDuplicates(DefaultTableModel table) {
             List<String> list = new ArrayList<>();
             for (int i = 0; i < table.getRowCount(); i++) {
-                  list.add(table.getValueAt(i, 0).toString());
+                  Object value = table.getValueAt(i, 0);
+                  if (value == null)
+                        return false;
+                  list.add(value.toString().trim());
             }
             Set<String> set = new HashSet<>(list);
             return set.size() == list.size();
@@ -4166,8 +4355,8 @@ public class Form extends javax.swing.JFrame {
       private boolean checkEmpty(DefaultTableModel table) {
             for (int i = 0; i < table.getRowCount(); i++) {
                   for (int j = 0; j < table.getColumnCount(); j++) {
-                        String value = table.getValueAt(i, j).toString();
-                        if (value.trim().isEmpty())
+                        Object value = table.getValueAt(i, j);
+                        if (value == null || value.toString().trim().isEmpty())
                               return false;
                   }
             }
@@ -4195,8 +4384,14 @@ public class Form extends javax.swing.JFrame {
                   count = 1;
             for (int i = 0; i < table.getRowCount(); i++) {
                   for (int j = count; j < table.getColumnCount(); j++) {
-                        String value = table.getValueAt(i, j).toString().trim();
-                        if (table.equals(valModel) && table.getValueAt(i, j).toString().isEmpty())
+                        Object cell = table.getValueAt(i, j);
+                        if (cell == null) {
+                              if (table.equals(valModel))
+                                    continue;
+                              return false;
+                        }
+                        String value = cell.toString().trim();
+                        if (table.equals(valModel) && value.isEmpty())
                               continue;
                         else if (Doubles.tryParse(value) == null)
                               return false;
@@ -4214,6 +4409,8 @@ public class Form extends javax.swing.JFrame {
        * Method shell (not body) was auto-generated from the GUI builder
        */
       private void descButtonActionPerformed() {
+            if (!prepareNavigation(processDescConfig))
+                  return;
             if (process == null)
                   dialog("Please fill out the process configuration", "Input Error");
             else {
@@ -4298,6 +4495,7 @@ public class Form extends javax.swing.JFrame {
                   processSet = true;
                   /* 2/23/26 PJD set "true" since this is process description" */
                   processDescSet = true;
+                  processDescDirty = false;
             }
       }
 
@@ -4307,6 +4505,8 @@ public class Form extends javax.swing.JFrame {
        * Method shell (not body) was auto-generated from the GUI builder
        */
       private void inputButtonActionPerformed() {
+            if (!prepareNavigation(inputConfig))
+                  return;
             if (desc.isEmpty()) {
                   dialog("Please fill out the previous process area descriptions", "Input Error");
             } else {
@@ -4385,10 +4585,14 @@ public class Form extends javax.swing.JFrame {
             int row = inModel.getRowCount();
             List<Integer> list = new ArrayList<>();
             // The order values must be ascending
-            for (int i = 0; i < row; i++) {
-                  list.add(Integer.parseInt(inModel.getValueAt(i, 8).toString().trim()));
-            }
             boolean ordered = true;
+            try {
+                  for (int i = 0; i < row; i++) {
+                        list.add(Integer.parseInt(inModel.getValueAt(i, 8).toString().trim()));
+                  }
+            } catch (Exception e) {
+                  ordered = false;
+            }
             /*
              * Below code was adapted from this website:
              * https://www.freecodecamp.org/news/how-to-sort-a-list-in-java/
@@ -4464,9 +4668,11 @@ public class Form extends javax.swing.JFrame {
                   input.put(10, 1, "Sin Period");
                   input.put(11, 1, "Sin Amplitude");
                   input.put(12, 1, "Order");
+                  syncValidationColumns();
                   inputMessageLabel.setText("Submitted successfully");
                   inputMessageLabel.setVisible(true);
                   inputSet = false;
+                  inputDirty = false;
             }
       }
 
@@ -4476,6 +4682,8 @@ public class Form extends javax.swing.JFrame {
        * Method shell (not body) was auto-generated from the GUI builder
        */
       private void valButtonActionPerformed() {
+            if (!prepareNavigation(valConfig))
+                  return;
             if (input.isEmpty())
                   dialog("Please fill out the previous input configuration", "Validation Error");
             else {
@@ -4560,6 +4768,7 @@ public class Form extends javax.swing.JFrame {
                         }
                   }
                   valMessageLabel.setText("Submitted successfully");
+                  validationDirty = false;
             }
       }
 
@@ -4569,6 +4778,8 @@ public class Form extends javax.swing.JFrame {
        * Method shell (not body) was auto-generated from the GUI builder
        */
       private void stateButtonActionPerformed() {
+            if (!prepareNavigation(stateConfig))
+                  return;
             if (desc.isEmpty()) {
                   dialog("Please fill out the process area descriptions", "State Error");
             } else {
@@ -4676,6 +4887,7 @@ public class Form extends javax.swing.JFrame {
                    * 2/23/26 this seems wrong, state code does not depend on process description
                    */
                   processDescSet = true;
+                  stateDirty = false;
             }
       }
 
@@ -4685,6 +4897,8 @@ public class Form extends javax.swing.JFrame {
        * Method shell (not body) was auto-generated from the GUI builder
        */
       private void outputButtonActionPerformed() {
+            if (!prepareNavigation(outputConfig))
+                  return;
             // This page has no dependencies, so it can be displayed at any time
             display(outputConfig);
       }
@@ -4751,6 +4965,7 @@ public class Form extends javax.swing.JFrame {
                         loaded = false;
                   outputMessageLabel.setText("Submitted successfully");
                   outputSet = false;
+                  outputDirty = false;
             }
       }
 
@@ -4760,6 +4975,8 @@ public class Form extends javax.swing.JFrame {
        * Method shell (not body) was auto-generated from the GUI builder
        */
       private void labButtonActionPerformed() {
+            if (!prepareNavigation(labConfig))
+                  return;
             if (input.isEmpty())
                   dialog("Please fill out the input configurations", "Output Error");
             /*
@@ -4836,54 +5053,6 @@ public class Form extends javax.swing.JFrame {
        */
       private void shapeInfoButtonActionPerformed() {
             dialog("<html>0 = Flatten<br/>1 = Swing<br/>2 = Asymptote</html>", "Gainshape Values");
-      }
-
-      /*
-       * previewShapeButtonActionPerformed: Opens the Output Shape Editor in a dialog,
-       * pre-populated with the current Lab Configuration field values so the user can
-       * visually preview and experiment with gain curve shapes before adding a row.
-       */
-      private void previewShapeButtonActionPerformed() {
-            // Parse current field values safely, falling back to defaults on any error
-            int modelIdx = modelBox.getSelectedIndex();
-            int orderIdx = orderBox.getSelectedIndex();
-            int shapeIdx = shapeBox.getSelectedIndex();
-            int directionIdx = directionBox.getSelectedIndex();
-            String asymptote = labAsymptoteField.getText().trim();
-            String slope = labSlopeField.getText().trim();
-
-            // Determine output min/max from the currently selected output variable
-            String outMin = "";
-            String outMax = "";
-            if (outputBox.getSelectedItem() != null) {
-                  String selected = outputBox.getSelectedItem().toString();
-                  for (int i = 2; i <= output.columnKeySet().size(); i++) {
-                        if (output.get(1, i) != null && output.get(1, i).equals(selected)) {
-                              // row 5 = Min, row 4 = Max (as stored by outputSubmitButtonActionPerformed)
-                              outMin = output.get(5, i) != null ? output.get(5, i) : "";
-                              outMax = output.get(4, i) != null ? output.get(4, i) : "";
-                              break;
-                        }
-                  }
-            }
-
-            // Build the panel using the parameterized constructor
-            OutputShapeEditorPanel editorPanel = new OutputShapeEditorPanel(
-                        modelIdx, orderIdx + 1, shapeIdx, directionIdx,
-                        asymptote, slope, outMin, outMax);
-
-            // Wrap in a resizable modal dialog sized to 90% of the screen
-            javax.swing.JDialog shapeDialog = new javax.swing.JDialog(this, "Output Shape Editor — Preview", true);
-            shapeDialog.setDefaultCloseOperation(javax.swing.JDialog.DISPOSE_ON_CLOSE);
-            shapeDialog.setContentPane(editorPanel);
-            shapeDialog.setResizable(true);
-            java.awt.Dimension screen = java.awt.Toolkit.getDefaultToolkit().getScreenSize();
-            int dlgW = (int) (screen.width * 0.90);
-            int dlgH = (int) (screen.height * 0.90);
-            shapeDialog.setSize(dlgW, dlgH);
-            shapeDialog.setMinimumSize(new java.awt.Dimension(900, 620));
-            shapeDialog.setLocationRelativeTo(this);
-            shapeDialog.setVisible(true);
       }
 
       /*
@@ -5022,6 +5191,26 @@ public class Form extends javax.swing.JFrame {
       private void labSubmitButtonActionPerformed() {
             labMessageLabel.setForeground(Color.BLACK);
             boolean ready = true;
+            Set<String> availableVariables = new HashSet<>();
+            for (int i = 2; i <= input.columnKeySet().size(); i++) {
+                  availableVariables.add(input.get(1, i));
+            }
+            for (int i = 2; i <= state.columnKeySet().size(); i++) {
+                  availableVariables.add(state.get(1, i));
+            }
+
+            for (int i = 0; i < labModel.getRowCount(); i++) {
+                  Object outputName = labModel.getValueAt(i, 1);
+                  Object variableName = labModel.getValueAt(i, 2);
+                  if (outputName == null || !labOutputs.containsKey(outputName.toString())) {
+                        labMessageLabel.setText("Lab output names must match the current output configuration");
+                        return;
+                  }
+                  if (variableName == null || !availableVariables.contains(variableName.toString())) {
+                        labMessageLabel.setText("Lab variable names must match the current input or state configuration");
+                        return;
+                  }
+            }
             // The data tables are created
             for (String key : labOutputs.keySet()) {
                   Table<Integer, Integer, String> table = labOutputs.get(key);
@@ -5062,11 +5251,19 @@ public class Form extends javax.swing.JFrame {
                         ready = false;
                         break;
                   }
-                  int totalWeight = 0;
+                  double totalWeight = 0;
                   for (int i = 2; i <= table.rowKeySet().size(); i++) {
-                        totalWeight = totalWeight + Integer.parseInt(table.get(i, 2));
+                        String weight = table.get(i, 2);
+                        if (Doubles.tryParse(weight) == null) {
+                              labMessageLabel.setText(key + " weight values must be numbers");
+                              ready = false;
+                              break;
+                        }
+                        totalWeight = totalWeight + Double.parseDouble(weight);
                   }
-                  if (totalWeight != 100) {
+                  if (!ready)
+                        break;
+                  if (Math.abs(totalWeight - 100.0) > 0.000001) {
                         labMessageLabel.setText(key + " weight values don't add up to 100");
                         ready = false;
                   }
@@ -5076,6 +5273,7 @@ public class Form extends javax.swing.JFrame {
                   outputSet = true;
                   stateSet = true;
                   inputSet = true;
+                  labDirty = false;
             }
       }
 
@@ -5085,9 +5283,10 @@ public class Form extends javax.swing.JFrame {
             // Requirements of the Project Report)
             output.put(1, 1, "Outputs");
             output.put(2, 1, "Description");
-            output.put(2, 1, "Noise");
-            output.put(3, 1, "Max");
-            output.put(4, 1, "Min");
+            output.put(3, 1, "Noise");
+            output.put(4, 1, "Max");
+            output.put(5, 1, "Min");
+            labOutputs.clear();
             for (int i = 2; i <= output.columnKeySet().size(); i++) {
                   Table<Integer, Integer, String> t = TreeBasedTable.create();
                   labOutputs.put(output.get(1, i), t);
@@ -5100,6 +5299,8 @@ public class Form extends javax.swing.JFrame {
        * Method shell (not body) was auto-generated from the GUI builder
        */
       private void genDataButtonActionPerformed() {
+            if (!prepareNavigation(generate) || !validateAllConfigurations())
+                  return;
             if (input.isEmpty())
                   dialog("Please fill out the input configurations", "Input Error");
             /*
@@ -5253,7 +5454,7 @@ public class Form extends javax.swing.JFrame {
                         // process: Method that performs updates with a value passed on from the
                         // publish() method in doInBackground()
                         @Override
-                        protected void process(List s) {
+                        protected void process(List<String> s) {
                               // The 's.size() - 1' part only was adapted from the tutorial, the rest was
                               // written by myself
                               progressLabel.setText(s.get(s.size() - 1).toString());
@@ -5348,25 +5549,9 @@ public class Form extends javax.swing.JFrame {
       }
 
       // write: Method for writing to a CSV file given the data table and file name
-      public void write(Table<Integer, Integer, String> table, String name) {
-            try {
-                  BufferedWriter writer = new BufferedWriter(
-                              new FileWriter(new File(downloadField.getText().trim(), name + ".csv")));
-                  /*
-                   * Below code was adapted from the question in this website:
-                   * https://stackoverflow.com/questions/38524942/guava-table-to-csv
-                   * The table variable was changed
-                   */
-                  CSVPrinter printer = new CSVPrinter(writer, CSVFormat.DEFAULT);
-                  printer.printRecords(
-                              table.rowMap().values().stream().map(x -> x.values()).collect(Collectors.toList()));
-                  // End of code reference
-                  printer.flush();
-                  writer.close();
-            } catch (IOException e) {
-                  dialog("Error: " + e, "Download error");
-                  e.printStackTrace();
-            }
+      private void write(Table<Integer, Integer, String> table, String name) throws IOException {
+            File file = new File(downloadField.getText().trim(), name + ".csv");
+            ConfigurationCsv.write(file, table);
       }
 
       // download: Method for downloading configurations
@@ -5416,8 +5601,8 @@ public class Form extends javax.swing.JFrame {
                   process.put(7, 2, processVariables.get("Uncoupled").toString());
                   process.put(8, 2, processVariables.get("Isolated").toString());
                   process.put(9, 2, processVariables.get("LabOffset").toString());
-                  process.put(10, 2, processVariables.get("Trim").toString());
-                  process.put(11, 2, processVariables.get("Draw").toString());
+                  process.put(10, 2, trimField.getText().trim());
+                  process.put(11, 2, drawField.getText().trim());
                   write(process, "process");
                   Table<Integer, Integer, String> lab = TreeBasedTable.create();
                   // Below data labels form part of the DG-13a requirement (from Appendix D -
@@ -5458,7 +5643,8 @@ public class Form extends javax.swing.JFrame {
                   write(lab, "labOutputs");
                   infoLabel.setText("Successfully downloaded");
             } catch (Exception e) {
-                  dialog("Error: " + e, "Load Error");
+                  infoLabel.setText("Download failed");
+                  dialog("Error: " + e, "Download Error");
                   e.printStackTrace();
             }
       }
