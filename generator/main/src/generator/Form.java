@@ -253,6 +253,8 @@ public class Form extends javax.swing.JFrame {
       private Table<Integer, Integer, String> input;
       // state: Data table for the State Configurations
       private Table<Integer, Integer, String> state;
+      // Stores the state variables originally loaded from state.csv
+      private List<String> loadedStateVariables;
       // output: Data table for the Output Configurations
       private Table<Integer, Integer, String> output;
       // labOutputs: Data map for the Lab configurations (a table for each output
@@ -330,6 +332,7 @@ public class Form extends javax.swing.JFrame {
             desc = TreeBasedTable.create();
             input = TreeBasedTable.create();
             state = TreeBasedTable.create();
+            loadedStateVariables = new ArrayList<>();
             output = TreeBasedTable.create();
             labOutputs = new LinkedHashMap<>();
             // Initialising additional JComboBoxes
@@ -4157,8 +4160,12 @@ public class Form extends javax.swing.JFrame {
                         }
                   }
                   if (!error) {
-                        loadStatusLabel.setText("Data prepared; changes are saved automatically when navigating");
-                        loaded = true;
+                	  // Remember the state variables from the successfully loaded state.csv
+                	  loadedStateVariables.clear();
+                	  loadedStateVariables.addAll(TableHeaders.stateVariableNames(tempState));
+
+                	  loadStatusLabel.setText("Data prepared, please press submit on each page before generating");
+                	  loaded = true;
                   }
 
             } catch (Exception e) {
@@ -5368,6 +5375,13 @@ public class Form extends javax.swing.JFrame {
             for (String requiredState : StateCalculator.REQUIRED_STATES) {
                 if (!configuredStates.contains(requiredState)) {
                     listTextArea.append("Missing required state variable: " + requiredState + "\n");
+                }
+            }
+            
+            // Check that state variables originally loaded from state.csv still exist
+            for (String loadedState : loadedStateVariables) {
+                if (!configuredStates.contains(loadedState)) {
+                    listTextArea.append("Missing configured state variable: " + loadedState + "\n");
                 }
             }
 
