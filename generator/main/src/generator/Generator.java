@@ -489,7 +489,7 @@ public class Generator {
                   move = min;
                } else if (j <= isolatedMoves) {
                   // Gradually move from min to max
-                  move = min + stepSize * (j - 1);
+            	  move = min + stepSize * j;
                } else {
                   // Instantly jump back to avg
                   move = avg;
@@ -691,11 +691,16 @@ public class Generator {
       double inLag2;
       // The dynRow + 1 row does not have historic data in the dynamics table
       if (row == dynRow + 1) {
-         inLag1 = Double.parseDouble(data.get(row - deadTime - 1, col));
-         inLag2 = Double.parseDouble(data.get(row - deadTime - 2, col));
+    	  // Row 3 is the first numeric data row.
+    	  // Prevent zero-settle configurations from reading row 2 descriptions.
+    	  int lag1Row = Math.max(3, row - deadTime - 1);
+    	  int lag2Row = Math.max(3, row - deadTime - 2);
+
+    	  inLag1 = Double.parseDouble(data.get(lag1Row, col));
+    	  inLag2 = Double.parseDouble(data.get(lag2Row, col));
       } else {
-         inLag1 = Double.parseDouble(dyn.get(3, col));
-         inLag2 = Double.parseDouble(dyn.get(4, col));
+    	  inLag1 = Double.parseDouble(dyn.get(3, col));
+          inLag2 = Double.parseDouble(dyn.get(4, col));
       }
       double result;
       if (lag2 <= 0)

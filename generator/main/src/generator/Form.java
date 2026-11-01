@@ -4167,7 +4167,6 @@ public class Form extends javax.swing.JFrame {
                 	  loadStatusLabel.setText("Data prepared, please press submit on each page before generating");
                 	  loaded = true;
                   }
-
             } catch (Exception e) {
                   dialog("Error: " + e, "Load Error");
                   e.printStackTrace();
