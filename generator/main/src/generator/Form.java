@@ -5078,6 +5078,28 @@ public class Form extends javax.swing.JFrame {
             String asymptote = labModel.getValueAt(row, 4).toString().trim();
             String slope = labModel.getValueAt(row, 6).toString().trim();
 
+            // Use the configured range of the variable feeding this curve.
+            String inMin = "";
+            String inMax = "";
+            for (int i = 2; i <= input.columnKeySet().size(); i++) {
+                  if (varName.equals(input.get(1, i))) {
+                        inMin = input.get(9, i) != null ? input.get(9, i) : "";
+                        inMax = input.get(8, i) != null ? input.get(8, i) : "";
+                        break;
+                  }
+            }
+            // Lab variables may also refer to a state variable, whose range is
+            // stored in different rows from an input variable.
+            if (inMin.isEmpty() || inMax.isEmpty()) {
+                  for (int i = 2; i <= state.columnKeySet().size(); i++) {
+                        if (varName.equals(state.get(1, i))) {
+                              inMin = state.get(8, i) != null ? state.get(8, i) : "";
+                              inMax = state.get(7, i) != null ? state.get(7, i) : "";
+                              break;
+                        }
+                  }
+            }
+
             // Look up output min/max
             String outMin = "";
             String outMax = "";
@@ -5091,7 +5113,7 @@ public class Form extends javax.swing.JFrame {
 
             OutputShapeEditorPanel editorPanel = new OutputShapeEditorPanel(
                         modelIdx, orderVal, shapeIdx, directionIdx,
-                        asymptote, slope, outMin, outMax);
+                        asymptote, slope, inMin, inMax, outMin, outMax);
 
             javax.swing.JDialog shapeDialog = new javax.swing.JDialog(this,
                         "Output Shape Editor — " + outputName + " / " + varName, true);
