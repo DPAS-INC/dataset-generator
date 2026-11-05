@@ -240,17 +240,11 @@ public class OutputShapeEditorPanel extends JPanel {
             "Slope",         slopeField     = new JTextField("2.2"),
             3);
 
-        // Row 4: Input Min | Input Max
-        addRow(topStrip, labelFont, lc, fc,
-            "Input Min",  inputMinField = new JTextField("0"),
-            "Input Max",  inputMaxField = new JTextField("100"),
-            4);
-
-        // Row 5: Output Min | Output Max
-        addRow(topStrip, labelFont, lc, fc,
-            "Output Min", outputMinField = new JTextField("0"),
-            "Output Max", outputMaxField = new JTextField("100"),
-            5);
+        // Min/Max values are used for calculations but not displayed in the editor
+        inputMinField = new JTextField("0");
+        inputMaxField = new JTextField("100");
+        outputMinField = new JTextField("0");
+        outputMaxField = new JTextField("100");
 
         // ── Presets: 8 buttons in one horizontal row ──
         JPanel presetStrip = new JPanel(new GridLayout(1, 8, 6, 0));
