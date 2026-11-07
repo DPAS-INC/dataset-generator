@@ -4,6 +4,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.*;
+import java.text.DecimalFormat;
 
 public class OutputShapeEditorPanel extends JPanel {
 
@@ -35,17 +36,22 @@ public class OutputShapeEditorPanel extends JPanel {
         private double[] xPoints = new double[201];
         private double[] yPoints = new double[201];
         private int pointCount = 0;
+        private double xMin = 0;
+        private double xMax = 100;
         private static final int PAD = 55;
+        private final DecimalFormat axisFormat = new DecimalFormat("0.######");
 
         CurvePanel() {
             setBackground(Color.WHITE);
             setBorder(BorderFactory.createLineBorder(new Color(222, 226, 230)));
         }
 
-        void setData(double[] x, double[] y, int count) {
+        void setData(double[] x, double[] y, int count, double min, double max) {
             this.xPoints = x;
             this.yPoints = y;
             this.pointCount = count;
+            this.xMin = min;
+            this.xMax = max;
             repaint();
         }
 
@@ -88,7 +94,8 @@ public class OutputShapeEditorPanel extends JPanel {
             g2.setColor(new Color(100, 100, 100));
             FontMetrics fm = g2.getFontMetrics();
             for (int i = 0; i <= gridLines; i++) {
-                String lbl = String.format("%.1f", i / (double) gridLines);
+                double tickValue = xMin + (xMax - xMin) * i / gridLines;
+                String lbl = axisFormat.format(tickValue);
                 int x = PAD + i * plotW / gridLines;
                 g2.drawString(lbl, x - fm.stringWidth(lbl) / 2, PAD + plotH + 16);
             }
@@ -101,7 +108,8 @@ public class OutputShapeEditorPanel extends JPanel {
             // X axis title
             g2.setFont(new Font("Segoe UI", Font.PLAIN, 12));
             g2.setColor(new Color(80, 80, 80));
-            String xTitle = "Normalized Input (0 \u2013 1)";
+            String xTitle = "Input (" + axisFormat.format(xMin) + " \u2013 "
+                    + axisFormat.format(xMax) + ")";
             g2.drawString(xTitle, PAD + plotW / 2 - g2.getFontMetrics().stringWidth(xTitle) / 2, h - 6);
 
             // Y axis title (rotated)
@@ -129,7 +137,8 @@ public class OutputShapeEditorPanel extends JPanel {
                 GeneralPath path = new GeneralPath();
                 boolean first = true;
                 for (int i = 0; i < pointCount; i++) {
-                    double cx = PAD + xPoints[i] * plotW;
+                    double normalizedX = (xPoints[i] - xMin) / (xMax - xMin);
+                    double cx = PAD + normalizedX * plotW;
                     double cy = PAD + (1.0 - Math.max(0, Math.min(1, yPoints[i]))) * plotH;
                     if (first) { path.moveTo(cx, cy); first = false; }
                     else         path.lineTo(cx, cy);
@@ -161,11 +170,14 @@ public class OutputShapeEditorPanel extends JPanel {
      * @param directionIndex 0=Down, 1=Up
      * @param asymptote      asymptote text (may be empty)
      * @param slope          slope text (may be empty)
+     * @param inMin          input minimum text (may be empty)
+     * @param inMax          input maximum text (may be empty)
      * @param outMin         output minimum text (may be empty)
      * @param outMax         output maximum text (may be empty)
      */
     public OutputShapeEditorPanel(int modelIndex, int order, int shapeIndex, int directionIndex,
-                                   String asymptote, String slope, String outMin, String outMax) {
+                                   String asymptote, String slope, String inMin, String inMax,
+                                   String outMin, String outMax) {
         this();
         if (modelIndex >= 0 && modelIndex < modelBox.getItemCount())
             modelBox.setSelectedIndex(modelIndex);
@@ -180,6 +192,10 @@ public class OutputShapeEditorPanel extends JPanel {
             asymptoteField.setText(asymptote);
         if (slope != null && !slope.isEmpty())
             slopeField.setText(slope);
+        if (inMin != null && !inMin.isEmpty())
+            inputMinField.setText(inMin);
+        if (inMax != null && !inMax.isEmpty())
+            inputMaxField.setText(inMax);
         if (outMin != null && !outMin.isEmpty())
             outputMinField.setText(outMin);
         if (outMax != null && !outMax.isEmpty())
@@ -405,6 +421,9 @@ public class OutputShapeEditorPanel extends JPanel {
             double outMin = Double.parseDouble(outputMinField.getText());
             double outMax = Double.parseDouble(outputMaxField.getText());
 
+            if (inMax <= inMin)
+                return;
+
             double[] xPts = new double[201];
             double[] yPts = new double[201];
             for (int i = 0; i <= 200; i++) {
@@ -412,10 +431,10 @@ public class OutputShapeEditorPanel extends JPanel {
                 double actualIn = inMin + (inMax - inMin) * normIn;
                 double gainOut  = calculateGainFunction(actualIn, inMax, inMin,
                                       asymptote, order, slope, model, direction, shape);
-                xPts[i] = normIn;
+                xPts[i] = actualIn;
                 yPts[i] = gainOut;
             }
-            curvePanel.setData(xPts, yPts, 201);
+            curvePanel.setData(xPts, yPts, 201, inMin, inMax);
 
             double gainAsym = calculateGainAsymptote(asymptote, inMax, inMin);
             gainInputLabel.setText("0.50");
