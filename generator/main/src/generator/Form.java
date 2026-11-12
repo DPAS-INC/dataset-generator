@@ -373,7 +373,9 @@ public class Form extends javax.swing.JFrame {
             loadLabel.setVisible(false);
             loadStatusLabel.setVisible(false);
             downloadField.setVisible(false);
-            downloadButton.setVisible(false);
+            // Saving configuration is independent from dataset generation. The save
+            // button is available as soon as the validated Generate Data page opens.
+            downloadButton.setVisible(true);
             downloadFolderButton.setVisible(false);
             downloadLabel.setVisible(false);
             getContentPane().setBackground(Color.WHITE);
@@ -3458,7 +3460,7 @@ public class Form extends javax.swing.JFrame {
             downloadButton.setBackground(new java.awt.Color(51, 153, 255));
             downloadButton.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
             downloadButton.setForeground(new java.awt.Color(255, 255, 255));
-            downloadButton.setText("Download Configurations");
+            downloadButton.setText("Save Configurations");
             downloadButton.setMargin(new java.awt.Insets(2, 5, 2, 5));
             downloadButton.addActionListener(new java.awt.event.ActionListener() {
                   public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -5362,7 +5364,7 @@ public class Form extends javax.swing.JFrame {
                         progressLabel.setVisible(false);
                         loadBar.setVisible(false);
                         timeLabel.setVisible(false);
-                        downloadButton.setVisible(false);
+                        downloadButton.setVisible(true);
                         downloadField.setVisible(false);
                         downloadLabel.setVisible(false);
                         downloadFolderButton.setVisible(false);
@@ -5532,7 +5534,7 @@ public class Form extends javax.swing.JFrame {
                                     e.printStackTrace();
                                     loadBar.setVisible(false);
                                     genButton.setVisible(true);
-                                    downloadButton.setVisible(false);
+                                    downloadButton.setVisible(true);
                               }
                         }
 
@@ -5583,103 +5585,16 @@ public class Form extends javax.swing.JFrame {
             }
       }
 
-      // write: Method for writing to a CSV file given the data table and file name
-      private void write(Table<Integer, Integer, String> table, String name) throws IOException {
-            File file = new File(downloadField.getText().trim(), name + ".csv");
-            ConfigurationCsv.write(file, table);
-      }
-
       // download: Method for downloading configurations
       private void download() {
             try {
-                  // Some tables can be directly translated
-                  write(input, "input");
-                  write(state, "state");
-                  write(output, "output");
-                  // Process area description data table has a different format in this class
-                  Table<Integer, Integer, String> processDesc = TreeBasedTable.create();
-                  // Below data labels form part of the DG-24 requirement (from Appendix D -
-                  // Requirements of the Project Report)
-                  processDesc.put(1, 1, "Description");
-                  processDesc.put(2, 1, "Deadtime Reel (min)");
-                  processDesc.put(3, 1, "Lag 1 Reel (min)");
-                  processDesc.put(4, 1, "Lag 2 Reel (min)");
-                  for (int j = 1; j < desc.rowKeySet().size() + 1; j++) {
-                        // Below data labels form part of the DG-24 requirement (from Appendix D -
-                        // Requirements of the Project Report)
-                        processDesc.put(1, j + 1, desc.get(j, "Name"));
-                        processDesc.put(2, j + 1, desc.get(j, "Deadtime Reel"));
-                        processDesc.put(3, j + 1, desc.get(j, "Lag 1"));
-                        processDesc.put(4, j + 1, desc.get(j, "Lag 2"));
-                  }
-                  write(processDesc, "processDesc");
-                  Table<Integer, Integer, String> process = TreeBasedTable.create();
-                  // Below data labels form part of the DG-11 requirement (from Appendix D -
-                  // Requirements of the Project Report)
-                  process.put(1, 1, "Start Date");
-                  process.put(2, 1, "Process Period (sec)");
-                  process.put(3, 1, "Analyzer 1 Period");
-                  process.put(4, 1, "Lab Period (sec)");
-                  process.put(5, 1, "Analyzer 2 Period");
-                  process.put(6, 1, "Added Settle Time (sec)");
-                  process.put(7, 1, "Uncoupled Moves");
-                  process.put(8, 1, "Isolated Moves");
-                  process.put(9, 1, "Lab Offset (sec)");
-                  process.put(10, 1, "Trim (ft)");
-                  process.put(11, 1, "Draw");
-                  process.put(1, 2, startDate);
-                  process.put(2, 2, processVariables.get("Process").toString());
-                  process.put(3, 2, processVariables.get("QCS").toString());
-                  process.put(4, 2, processVariables.get("Lab").toString());
-                  process.put(5, 2, processVariables.get("Pulpeye").toString());
-                  process.put(6, 2, processVariables.get("Settle").toString());
-                  process.put(7, 2, processVariables.get("Uncoupled").toString());
-                  process.put(8, 2, processVariables.get("Isolated").toString());
-                  process.put(9, 2, processVariables.get("LabOffset").toString());
-                  process.put(10, 2, trimField.getText().trim());
-                  process.put(11, 2, drawField.getText().trim());
-                  write(process, "process");
-                  Table<Integer, Integer, String> lab = TreeBasedTable.create();
-                  // Below data labels form part of the DG-13a requirement (from Appendix D -
-                  // Requirements of the Project Report)
-                  lab.put(1, 2, "Weight");
-                  lab.put(1, 3, "Asymptote");
-                  lab.put(1, 4, "Order");
-                  lab.put(1, 5, "Slope");
-                  lab.put(1, 6, "Gainmodel");
-                  lab.put(1, 7, "Direction");
-                  lab.put(1, 8, "Gainshape");
-                  int row = 1;
-                  int current = 0;
-                  // The lab outputs have a specific format, the below loop goes through the three
-                  // types of rows possible in 'labOutputs.csv'
-                  for (String key : labOutputs.keySet()) {
-                        int labRow = 2;
-                        Table<Integer, Integer, String> table = labOutputs.get(key);
-                        // Output name row
-                        lab.put(row, 1, key);
-                        for (int j = 2; j <= 8; j++) {
-                              lab.put(row, j, "");
-                        }
-                        // Data row
-                        for (int i = row + 1; i < row + table.rowKeySet().size(); i++) {
-                              for (int j = 1; j <= 8; j++) {
-                                    lab.put(i, j, table.get(labRow, j));
-                              }
-                              current = i + 1;
-                              labRow++;
-                        }
-                        // Empty row
-                        for (int j = 1; j <= 8; j++) {
-                              lab.put(current, j, "");
-                        }
-                        row = current + 1;
-                  }
-                  write(lab, "labOutputs");
-                  infoLabel.setText("Successfully downloaded");
+                  ConfigurationSaver.save(new File(downloadField.getText().trim()), input, state, output, desc,
+                              labOutputs, processVariables, startDate, trimField.getText().trim(),
+                              drawField.getText().trim());
+                  infoLabel.setText("Configurations saved successfully");
             } catch (Exception e) {
-                  infoLabel.setText("Download failed");
-                  dialog("Error: " + e, "Download Error");
+                  infoLabel.setText("Could not save configurations");
+                  dialog("Could not save configurations: " + e.getMessage(), "Save Error");
                   e.printStackTrace();
             }
       }
