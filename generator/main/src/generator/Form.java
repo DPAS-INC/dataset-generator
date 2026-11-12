@@ -5437,6 +5437,40 @@ public class Form extends javax.swing.JFrame {
                 infoLabel.setText("The following variables are missing from inputs and state");
             }
       }
+      
+      // handleGenerationError: Displays an error message and allows the user to
+      // restart or close the application after a failed dataset generation.
+      private void handleGenerationError(Exception error) {
+    	    error.printStackTrace();
+
+    	    generating = false;
+    	    loadBar.setVisible(false);
+    	    progressLabel.setText("Generation failed.");
+
+    	    Object[] options = {"Restart", "Close"};
+
+    	    int choice = JOptionPane.showOptionDialog(
+    	        this,
+    	        "Dataset generation failed:\n" + error
+    	            + "\n\nWould you like to restart or close the application?"
+    	            + "\nUnsaved configuration changes will be lost.",
+    	        "Generation Error",
+    	        JOptionPane.DEFAULT_OPTION,
+    	        JOptionPane.ERROR_MESSAGE,
+    	        null,
+    	        options,
+    	        options[0]
+    	    );
+
+    	    if (choice == 0) {
+    	        Form newForm = new Form();
+    	        newForm.setVisible(true);
+    	        dispose();
+    	    } 
+    	    else {
+    	        System.exit(0);
+    	    }
+    	}
 
       // run: Method that generates the dataset taking in the start time as a
       // parameter
@@ -5452,7 +5486,7 @@ public class Form extends javax.swing.JFrame {
                   // Boolean allows for the doInBackground() status to be checked and String is
                   // the type of the data sent to the process() method
                   SwingWorker<Boolean, String> sw = new SwingWorker<Boolean, String>() {
-
+                	    private Exception generationError;
                         // doInBackground: Method that performs a sequence of actions in a SwingWorker
                         // thread
                         @Override
@@ -5479,10 +5513,8 @@ public class Form extends javax.swing.JFrame {
                                     // Returns true so the get() method can be checked to see if it was successful
                                     return true;
                               } catch (Exception e) {
-                                    progressLabel.setText("Error:" + e);
-                                    dialog("Error: " + e, "Generation Error");
-                                    e.printStackTrace();
-                                    return false;
+                            	    generationError = e;
+                            	    return false;
                               }
                         }
 
@@ -5499,41 +5531,47 @@ public class Form extends javax.swing.JFrame {
                         // done: Method that performs actions once doInBackground() completes
                         @Override
                         protected void done() {
-                              // The contents of the try block were not used from the SwingWorker tutorial
-                              try {
-                                    // Only runs if successful
-                                    if (get()) {
-                                          /*
-                                           * Below code was adapted from this tutorial (under Method 2 :- Using the
-                                           * LocalTime and ChronoUnit class):
-                                           * https://www.geeksforgeeks.org/java-program-to-calculate-difference-between-
-                                           * two-time-periods/
-                                           * Some variables and text in String were changed
-                                           */
-                                          LocalTime finish = LocalTime.now();
-                                          long hours = ChronoUnit.HOURS.between(start, finish);
-                                          long minutes = ChronoUnit.MINUTES.between(start, finish) % 60;
-                                          long seconds = ChronoUnit.SECONDS.between(start, finish) % 60;
-                                          String time = hours + " hours " + minutes + " minutes " + seconds
-                                                      + " seconds";
-                                          // End of code reference (Time difference reference)
-                                          progressLabel.setText("Dataset generated in the /data folder");
-                                          timeLabel.setVisible(true);
-                                          timeLabel.setText("Time taken: " + time);
-                                          genButton.setVisible(true);
-                                          generating = false;
-                                          downloadButton.setVisible(true);
-                                    }
-                                    // The catch block was condensed from the SwingWorker tutorial and additional
-                                    // lines were added by myself
-                              } catch (InterruptedException | ExecutionException e) {
-                                    progressLabel.setText("Error: " + e);
-                                    dialog("Error: " + e, "Generation Error");
-                                    e.printStackTrace();
-                                    loadBar.setVisible(false);
+                            try {
+                                if (get()) {
+                                    LocalTime finish = LocalTime.now();
+
+                                    long hours = ChronoUnit.HOURS.between(start, finish);
+                                    long minutes = ChronoUnit.MINUTES.between(start, finish) % 60;
+                                    long seconds = ChronoUnit.SECONDS.between(start, finish) % 60;
+
+                                    String time = hours + " hours "
+                                            + minutes + " minutes "
+                                            + seconds + " seconds";
+
+                                    progressLabel.setText("Dataset generated in the /data folder");
+                                    timeLabel.setVisible(true);
+                                    timeLabel.setText("Time taken: " + time);
+
                                     genButton.setVisible(true);
-                                    downloadButton.setVisible(false);
-                              }
+                                    generating = false;
+                                    downloadButton.setVisible(true);
+
+                                } else {
+                                    // Generation returned false due to an error.
+                                    handleGenerationError(
+                                        generationError != null
+                                            ? generationError
+                                            : new Exception("Dataset generation failed.")
+                                    );
+                                }
+
+                            } catch (InterruptedException e) {
+                                Thread.currentThread().interrupt();
+                                handleGenerationError(e);
+
+                            } catch (ExecutionException e) {
+                                Throwable cause = e.getCause();
+                                handleGenerationError(
+                                    cause instanceof Exception
+                                        ? (Exception) cause
+                                        : new Exception("Generation failed.", cause)
+                                );
+                            }
                         }
 
                   };
