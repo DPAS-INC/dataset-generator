@@ -252,7 +252,7 @@ public class OutputShapeEditorPanel extends JPanel {
 
         // Row 3: Asymptote | Slope
         addRow(topStrip, labelFont, lc, fc,
-            "Asymptote (%)", asymptoteField = new JTextField("50"),
+            "Asymptote", asymptoteField = new JTextField("50"),
             "Slope",         slopeField     = new JTextField("2.2"),
             3);
 
