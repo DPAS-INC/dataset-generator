@@ -1037,7 +1037,7 @@ public class Form extends javax.swing.JFrame {
             qcsLabel.setBackground(new java.awt.Color(0, 0, 0));
             qcsLabel.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
             qcsLabel.setForeground(new java.awt.Color(0, 0, 0));
-            qcsLabel.setText("Analyzer 1 Period");
+            qcsLabel.setText("Analyzer 1 Period (sec)");
 
             qcsField.setBackground(new java.awt.Color(255, 255, 255));
             qcsField.setForeground(new java.awt.Color(0, 0, 0));
@@ -1061,7 +1061,7 @@ public class Form extends javax.swing.JFrame {
             pulpLabel.setBackground(new java.awt.Color(0, 0, 0));
             pulpLabel.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
             pulpLabel.setForeground(new java.awt.Color(0, 0, 0));
-            pulpLabel.setText("Analyzer 2 Period");
+            pulpLabel.setText("Analyzer 2 Period (sec)");
 
             pulpField.setBackground(new java.awt.Color(255, 255, 255));
             pulpField.setForeground(new java.awt.Color(0, 0, 0));
@@ -1144,8 +1144,8 @@ public class Form extends javax.swing.JFrame {
                                                                                                 .addComponent(
                                                                                                             formatLabel))
                                                                                     .addComponent(dateLabel)
-                                                                                    .addComponent(labLabel)
-                                                                                    .addComponent(labField,
+                                                                                    .addComponent(pulpLabel)
+                                                                                    .addComponent(pulpField,
                                                                                                 javax.swing.GroupLayout.PREFERRED_SIZE,
                                                                                                 91,
                                                                                                 javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -1173,11 +1173,11 @@ public class Form extends javax.swing.JFrame {
                                                                                                 javax.swing.GroupLayout.PREFERRED_SIZE,
                                                                                                 91,
                                                                                                 javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                                                    .addComponent(pulpField,
+                                                                                    .addComponent(labField,
                                                                                                 javax.swing.GroupLayout.PREFERRED_SIZE,
                                                                                                 91,
                                                                                                 javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                                                    .addComponent(pulpLabel)
+                                                                                    .addComponent(labLabel)
                                                                                     .addComponent(labOffsetLabel)
                                                                                     .addComponent(labOffsetField,
                                                                                                 javax.swing.GroupLayout.PREFERRED_SIZE,
@@ -1233,7 +1233,7 @@ public class Form extends javax.swing.JFrame {
                                                                         javax.swing.GroupLayout.Alignment.LEADING)
                                                             .addComponent(dateLabel,
                                                                         javax.swing.GroupLayout.Alignment.TRAILING)
-                                                            .addComponent(pulpLabel))
+                                                            .addComponent(labLabel))
                                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                                 .addGroup(processConfigLayout
                                                             .createParallelGroup(
@@ -1243,7 +1243,7 @@ public class Form extends javax.swing.JFrame {
                                                                         javax.swing.GroupLayout.DEFAULT_SIZE,
                                                                         javax.swing.GroupLayout.PREFERRED_SIZE)
                                                             .addComponent(formatLabel)
-                                                            .addComponent(pulpField,
+                                                            .addComponent(labField,
                                                                         javax.swing.GroupLayout.PREFERRED_SIZE,
                                                                         javax.swing.GroupLayout.DEFAULT_SIZE,
                                                                         javax.swing.GroupLayout.PREFERRED_SIZE))
@@ -1297,18 +1297,18 @@ public class Form extends javax.swing.JFrame {
                                                 .addGroup(processConfigLayout
                                                             .createParallelGroup(
                                                                         javax.swing.GroupLayout.Alignment.BASELINE)
-                                                            .addComponent(pulpLabel)
                                                             .addComponent(labLabel)
+                                                            .addComponent(pulpLabel)
                                                             .addComponent(labOffsetLabel))
                                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                                 .addGroup(processConfigLayout
                                                             .createParallelGroup(
                                                                         javax.swing.GroupLayout.Alignment.BASELINE)
-                                                            .addComponent(pulpField,
+                                                            .addComponent(labField,
                                                                         javax.swing.GroupLayout.PREFERRED_SIZE,
                                                                         javax.swing.GroupLayout.DEFAULT_SIZE,
                                                                         javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                            .addComponent(labField,
+                                                            .addComponent(pulpField,
                                                                         javax.swing.GroupLayout.PREFERRED_SIZE,
                                                                         javax.swing.GroupLayout.DEFAULT_SIZE,
                                                                         javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -3774,15 +3774,22 @@ public class Form extends javax.swing.JFrame {
                   valSubmitButtonActionPerformed();
                   return !validationDirty;
             }
-            if (currentPage == stateConfig && stateDirty) {
-                  if (stateModel.getRowCount() == 0) {
+            if (currentPage == stateConfig) {
+                if (stateDirty) {
+                    if (stateModel.getRowCount() == 0) {
                         state.clear();
                         stateSet = false;
                         stateDirty = false;
+                        warnMissingStateVariables();
                         return true;
-                  }
-                  stateSubmitButtonActionPerformed();
-                  return !stateDirty;
+                    }
+
+                    stateSubmitButtonActionPerformed();
+                    return !stateDirty;
+                }
+
+                warnMissingStateVariables();
+                return true;
             }
             if (currentPage == outputConfig && outputDirty) {
                   outputSubmitButtonActionPerformed();
@@ -4473,6 +4480,50 @@ public class Form extends javax.swing.JFrame {
             }
             return true;
       }
+      
+      // Returns state variables required by the application or loaded configuration.
+      private List<String> findMissingStateVariables() {
+          List<String> configuredStates = new ArrayList<>();
+
+          for (int i = 0; i < stateModel.getRowCount(); i++) {
+              Object value = stateModel.getValueAt(i, 0);
+
+              if (value != null && !value.toString().trim().isEmpty()) {
+                  configuredStates.add(value.toString().trim());
+              }
+          }
+
+          List<String> missing = new ArrayList<>();
+
+          for (String required : StateCalculator.REQUIRED_STATES) {
+              if (!configuredStates.contains(required) && !missing.contains(required)) {
+                  missing.add(required);
+              }
+          }
+
+          for (String loaded : loadedStateVariables) {
+              if (!configuredStates.contains(loaded) && !missing.contains(loaded)) {
+                  missing.add(loaded);
+              }
+          }
+
+          return missing;
+      }
+
+      // Warns the user when required state variables are missing.
+      private void warnMissingStateVariables() {
+          List<String> missing = findMissingStateVariables();
+
+          if (!missing.isEmpty()) {
+              stateMessageLabel.setVisible(true);
+              stateMessageLabel.setText("Missing required state variables");
+
+              JOptionPane.showMessageDialog(this,
+                      "The following state variables are missing:\n\n" + String.join("\n", missing),
+                      "Missing State Variables",
+                      JOptionPane.WARNING_MESSAGE);
+          }
+      }
 
       /*
        * descButtonActionPerformed: Method when clicking on the Process Area
@@ -4977,6 +5028,7 @@ public class Form extends javax.swing.JFrame {
                    */
                   processDescSet = true;
                   stateDirty = false;
+                  warnMissingStateVariables();
             }
       }
 
