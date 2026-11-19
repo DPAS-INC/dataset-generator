@@ -3671,6 +3671,15 @@ public class Form extends javax.swing.JFrame {
             JOptionPane.showMessageDialog(main, text, name, JOptionPane.PLAIN_MESSAGE);
             // End of code reference
       }
+      
+
+      // applyDefault: Assigns a default value when a text field is empty.
+     private void applyDefault(javax.swing.JTextField field, String defaultValue) {
+         if (field.getText() == null || field.getText().trim().isEmpty()) {
+             field.setText(defaultValue);
+         }
+     }
+
 
       // display: Method that displays a given panel
       private void display(JPanel panel) {
@@ -4279,6 +4288,17 @@ public class Form extends javax.swing.JFrame {
        * Method shell (not body) was auto-generated from the GUI builder
        */
       private void submitProcessButtonActionPerformed() {
+    	    // Apply default values before validating the configuration.
+    	    applyDefault(dateField, LocalDate.now().format(DateTimeFormatter.ofPattern("MM/dd/yy")));
+    	    applyDefault(processField, "5");
+    	    applyDefault(qcsField, "60");
+    	    applyDefault(pulpField, "60");
+    	    applyDefault(labField, "1000");
+    	    applyDefault(labOffsetField, "0");
+    	    applyDefault(ucField, "5");
+    	    applyDefault(isolatedField, "5");
+    	    applyDefault(settleField, "0");
+
             // Prepaes variables to be validated
             String date = dateField.getText().trim();
             // String draw = drawField.getText().trim();
@@ -4358,6 +4378,49 @@ public class Form extends javax.swing.JFrame {
             Set<String> set = new HashSet<>(list);
             return set.size() == list.size();
       }
+      
+
+	  // applyTableDefault: Replaces empty table cells with a default value.
+	  private void applyTableDefault(DefaultTableModel model, int column, String defaultValue) {
+	      for (int i = 0; i < model.getRowCount(); i++) {
+	          Object value = model.getValueAt(i, column);
+	
+	          if (value == null || value.toString().trim().isEmpty()) {
+	              model.setValueAt(defaultValue, i, column);
+	          }
+	      }
+	  }
+	  
+	  // applyDefaultNames: Assigns unique names to unnamed process descriptions.
+	  private void applyDefaultNames(DefaultTableModel model) {
+	      int count = 1;
+	      Set<String> usedNames = new HashSet<>();
+
+	      // Collect existing names to prevent duplicates.
+	      for (int i = 0; i < model.getRowCount(); i++) {
+	          Object value = model.getValueAt(i, 0);
+
+	          if (value != null && !value.toString().trim().isEmpty()) {
+	              usedNames.add(value.toString().trim());
+	          }
+	      }
+
+	      for (int i = 0; i < model.getRowCount(); i++) {
+	          Object value = model.getValueAt(i, 0);
+
+	          if (value == null || value.toString().trim().isEmpty()) {
+	              String name;
+
+	              do {
+	                  name = "default_name_" + count++;
+	              } while (usedNames.contains(name));
+
+	              model.setValueAt(name, i, 0);
+	              usedNames.add(name);
+	          }
+	      }
+	  }
+
 
       // checkEmpty: Method for checking if a table has empty values
       private boolean checkEmpty(DefaultTableModel table) {
@@ -4464,13 +4527,18 @@ public class Form extends javax.swing.JFrame {
        */
       private void processDescSubmitButtonActionPerformed() {
             processDescMessageLabel.setVisible(true);
+	        // Apply defaults before validating table entries.
+	        applyDefaultNames(processDescModel);
+	        applyTableDefault(processDescModel, 1, "0");
+	        applyTableDefault(processDescModel, 2, "0");
+	        applyTableDefault(processDescModel, 3, "0");
             int row = processDescModel.getRowCount();
             boolean multiple = true;
             // The deadtime column values (converted into hours) must be a multiple of the
             // process period
             try {
                   for (int i = 0; i < row; i++) {
-                        if (((double) processDescModel.getValueAt(i, 1) * 60) % process != 0) {
+                        if ((Double.parseDouble(processDescModel.getValueAt(i, 1).toString().trim()) * 60) % process != 0) {
                               multiple = false;
                               break;
                         }
@@ -4590,6 +4658,14 @@ public class Form extends javax.swing.JFrame {
        */
       private void inputSubmitButtonActionPerformed() {
             inputMessageLabel.setForeground(Color.black);
+            // Apply defaults before validating input variables.
+            applyDefaultNames(inModel);
+            applyTableDefault(inModel, 2, "0"); // Noise
+            applyTableDefault(inModel, 3, "0"); // MV Lag
+            applyTableDefault(inModel, 4, "100"); // Max
+            applyTableDefault(inModel, 5, "0"); // Min
+            applyTableDefault(inModel, 6, String.valueOf(process)); // Sin Period
+            applyTableDefault(inModel, 7, "0"); // Sin Amplitude
             int row = inModel.getRowCount();
             List<Integer> list = new ArrayList<>();
             // The order values must be ascending
@@ -4852,6 +4928,11 @@ public class Form extends javax.swing.JFrame {
        */
       private void stateSubmitButtonActionPerformed() {
             stateMessageLabel.setVisible(true);
+            // Apply defaults before validating state variables.
+            applyDefaultNames(stateModel);
+            applyTableDefault(stateModel, 2, "0"); // Noise
+            applyTableDefault(stateModel, 3, "100"); // Max
+            applyTableDefault(stateModel, 4, "0"); // Min
             // Applies validation checks
             if (!checkEmpty(stateModel)) {
                   stateMessageLabel.setText("Fields cannot be empty");
@@ -4947,6 +5028,12 @@ public class Form extends javax.swing.JFrame {
        */
       private void outputSubmitButtonActionPerformed() {
             outputMessageLabel.setVisible(true);
+            // Apply defaults before validating output variables.
+            applyDefaultNames(outModel);
+            applyTableDefault(outModel, 1, "default_description"); // Description
+            applyTableDefault(outModel, 2, "0"); // Noise
+            applyTableDefault(outModel, 3, "1"); // Max
+            applyTableDefault(outModel, 4, "0"); // Min
             // Applies validation checks
             if (!checkEmpty(outModel)) {
                   outputMessageLabel.setText("Fields cannot be empty");
@@ -5180,6 +5267,29 @@ public class Form extends javax.swing.JFrame {
        */
       private void labAddButtonActionPerformed() {
             labMessageLabel.setForeground(Color.BLACK);
+            // Apply defaults when adding a lab variable.
+            String selectedOutput = String.valueOf(outputBox.getSelectedItem());
+
+            if (labWeightField.getText().isBlank()) {
+                boolean hasExistingVariable = false;
+
+                for (int i = 0; i < labModel.getRowCount(); i++) {
+                    if (selectedOutput.equals(String.valueOf(labModel.getValueAt(i, 1)))) {
+                        hasExistingVariable = true;
+                        break;
+                    }
+                }
+
+                if (!hasExistingVariable) {
+                    applyDefault(labWeightField, "100");
+                }
+            }
+
+            int selectedModel = modelBox.getSelectedIndex();
+
+            if (selectedModel == 1 || selectedModel == 2) {
+                applyDefault(labSlopeField, "1");
+            }
             String slope = labSlopeField.getText();
             String asymptote = labAsymptoteField.getText();
             String weight = labWeightField.getText();
@@ -5220,6 +5330,39 @@ public class Form extends javax.swing.JFrame {
        */
       private void labSubmitButtonActionPerformed() {
             labMessageLabel.setForeground(Color.BLACK);
+            // Apply defaults to existing lab configuration rows.
+            for (int i = 0; i < labModel.getRowCount(); i++) {
+                Object modelValue = labModel.getValueAt(i, 7);
+
+                if (modelValue != null) {
+                    String gainModel = modelValue.toString().trim();
+
+                    if (gainModel.equals("1") || gainModel.equals("2")) {
+                        Object slope = labModel.getValueAt(i, 6);
+
+                        if (slope == null || slope.toString().isBlank()) {
+                            labModel.setValueAt("1", i, 6);
+                        }
+                    }
+                }
+
+                Object weight = labModel.getValueAt(i, 3);
+
+                if (weight == null || weight.toString().isBlank()) {
+                    String outputName = String.valueOf(labModel.getValueAt(i, 1));
+                    int variableCount = 0;
+
+                    for (int j = 0; j < labModel.getRowCount(); j++) {
+                        if (outputName.equals(String.valueOf(labModel.getValueAt(j, 1)))) {
+                            variableCount++;
+                        }
+                    }
+
+                    if (variableCount == 1) {
+                        labModel.setValueAt("100", i, 3);
+                    }
+                }
+            }
             boolean ready = true;
             Set<String> availableVariables = new HashSet<>();
             for (int i = 2; i <= input.columnKeySet().size(); i++) {
