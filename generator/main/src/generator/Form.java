@@ -1037,7 +1037,7 @@ public class Form extends javax.swing.JFrame {
             qcsLabel.setBackground(new java.awt.Color(0, 0, 0));
             qcsLabel.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
             qcsLabel.setForeground(new java.awt.Color(0, 0, 0));
-            qcsLabel.setText("Analyzer 1 Period");
+            qcsLabel.setText("Analyzer 1 Period (sec)");
 
             qcsField.setBackground(new java.awt.Color(255, 255, 255));
             qcsField.setForeground(new java.awt.Color(0, 0, 0));
@@ -1061,7 +1061,7 @@ public class Form extends javax.swing.JFrame {
             pulpLabel.setBackground(new java.awt.Color(0, 0, 0));
             pulpLabel.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
             pulpLabel.setForeground(new java.awt.Color(0, 0, 0));
-            pulpLabel.setText("Analyzer 2 Period");
+            pulpLabel.setText("Analyzer 2 Period (sec)");
 
             pulpField.setBackground(new java.awt.Color(255, 255, 255));
             pulpField.setForeground(new java.awt.Color(0, 0, 0));
@@ -1144,8 +1144,8 @@ public class Form extends javax.swing.JFrame {
                                                                                                 .addComponent(
                                                                                                             formatLabel))
                                                                                     .addComponent(dateLabel)
-                                                                                    .addComponent(labLabel)
-                                                                                    .addComponent(labField,
+                                                                                    .addComponent(pulpLabel)
+                                                                                    .addComponent(pulpField,
                                                                                                 javax.swing.GroupLayout.PREFERRED_SIZE,
                                                                                                 91,
                                                                                                 javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -1173,11 +1173,11 @@ public class Form extends javax.swing.JFrame {
                                                                                                 javax.swing.GroupLayout.PREFERRED_SIZE,
                                                                                                 91,
                                                                                                 javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                                                    .addComponent(pulpField,
+                                                                                    .addComponent(labField,
                                                                                                 javax.swing.GroupLayout.PREFERRED_SIZE,
                                                                                                 91,
                                                                                                 javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                                                    .addComponent(pulpLabel)
+                                                                                    .addComponent(labLabel)
                                                                                     .addComponent(labOffsetLabel)
                                                                                     .addComponent(labOffsetField,
                                                                                                 javax.swing.GroupLayout.PREFERRED_SIZE,
@@ -1233,7 +1233,7 @@ public class Form extends javax.swing.JFrame {
                                                                         javax.swing.GroupLayout.Alignment.LEADING)
                                                             .addComponent(dateLabel,
                                                                         javax.swing.GroupLayout.Alignment.TRAILING)
-                                                            .addComponent(pulpLabel))
+                                                            .addComponent(labLabel))
                                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                                 .addGroup(processConfigLayout
                                                             .createParallelGroup(
@@ -1243,7 +1243,7 @@ public class Form extends javax.swing.JFrame {
                                                                         javax.swing.GroupLayout.DEFAULT_SIZE,
                                                                         javax.swing.GroupLayout.PREFERRED_SIZE)
                                                             .addComponent(formatLabel)
-                                                            .addComponent(pulpField,
+                                                            .addComponent(labField,
                                                                         javax.swing.GroupLayout.PREFERRED_SIZE,
                                                                         javax.swing.GroupLayout.DEFAULT_SIZE,
                                                                         javax.swing.GroupLayout.PREFERRED_SIZE))
@@ -1297,18 +1297,18 @@ public class Form extends javax.swing.JFrame {
                                                 .addGroup(processConfigLayout
                                                             .createParallelGroup(
                                                                         javax.swing.GroupLayout.Alignment.BASELINE)
-                                                            .addComponent(pulpLabel)
                                                             .addComponent(labLabel)
+                                                            .addComponent(pulpLabel)
                                                             .addComponent(labOffsetLabel))
                                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                                 .addGroup(processConfigLayout
                                                             .createParallelGroup(
                                                                         javax.swing.GroupLayout.Alignment.BASELINE)
-                                                            .addComponent(pulpField,
+                                                            .addComponent(labField,
                                                                         javax.swing.GroupLayout.PREFERRED_SIZE,
                                                                         javax.swing.GroupLayout.DEFAULT_SIZE,
                                                                         javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                            .addComponent(labField,
+                                                            .addComponent(pulpField,
                                                                         javax.swing.GroupLayout.PREFERRED_SIZE,
                                                                         javax.swing.GroupLayout.DEFAULT_SIZE,
                                                                         javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -3671,6 +3671,15 @@ public class Form extends javax.swing.JFrame {
             JOptionPane.showMessageDialog(main, text, name, JOptionPane.PLAIN_MESSAGE);
             // End of code reference
       }
+      
+
+      // applyDefault: Assigns a default value when a text field is empty.
+     private void applyDefault(javax.swing.JTextField field, String defaultValue) {
+         if (field.getText() == null || field.getText().trim().isEmpty()) {
+             field.setText(defaultValue);
+         }
+     }
+
 
       // display: Method that displays a given panel
       private void display(JPanel panel) {
@@ -3765,15 +3774,22 @@ public class Form extends javax.swing.JFrame {
                   valSubmitButtonActionPerformed();
                   return !validationDirty;
             }
-            if (currentPage == stateConfig && stateDirty) {
-                  if (stateModel.getRowCount() == 0) {
+            if (currentPage == stateConfig) {
+                if (stateDirty) {
+                    if (stateModel.getRowCount() == 0) {
                         state.clear();
                         stateSet = false;
                         stateDirty = false;
+                        warnMissingStateVariables();
                         return true;
-                  }
-                  stateSubmitButtonActionPerformed();
-                  return !stateDirty;
+                    }
+
+                    stateSubmitButtonActionPerformed();
+                    return !stateDirty;
+                }
+
+                warnMissingStateVariables();
+                return true;
             }
             if (currentPage == outputConfig && outputDirty) {
                   outputSubmitButtonActionPerformed();
@@ -4279,6 +4295,17 @@ public class Form extends javax.swing.JFrame {
        * Method shell (not body) was auto-generated from the GUI builder
        */
       private void submitProcessButtonActionPerformed() {
+    	    // Apply default values before validating the configuration.
+    	    applyDefault(dateField, LocalDate.now().format(DateTimeFormatter.ofPattern("MM/dd/yy")));
+    	    applyDefault(processField, "5");
+    	    applyDefault(qcsField, "60");
+    	    applyDefault(pulpField, "60");
+    	    applyDefault(labField, "1000");
+    	    applyDefault(labOffsetField, "0");
+    	    applyDefault(ucField, "5");
+    	    applyDefault(isolatedField, "5");
+    	    applyDefault(settleField, "0");
+
             // Prepaes variables to be validated
             String date = dateField.getText().trim();
             // String draw = drawField.getText().trim();
@@ -4358,6 +4385,49 @@ public class Form extends javax.swing.JFrame {
             Set<String> set = new HashSet<>(list);
             return set.size() == list.size();
       }
+      
+
+	  // applyTableDefault: Replaces empty table cells with a default value.
+	  private void applyTableDefault(DefaultTableModel model, int column, String defaultValue) {
+	      for (int i = 0; i < model.getRowCount(); i++) {
+	          Object value = model.getValueAt(i, column);
+	
+	          if (value == null || value.toString().trim().isEmpty()) {
+	              model.setValueAt(defaultValue, i, column);
+	          }
+	      }
+	  }
+	  
+	  // applyDefaultNames: Assigns unique names to unnamed process descriptions.
+	  private void applyDefaultNames(DefaultTableModel model) {
+	      int count = 1;
+	      Set<String> usedNames = new HashSet<>();
+
+	      // Collect existing names to prevent duplicates.
+	      for (int i = 0; i < model.getRowCount(); i++) {
+	          Object value = model.getValueAt(i, 0);
+
+	          if (value != null && !value.toString().trim().isEmpty()) {
+	              usedNames.add(value.toString().trim());
+	          }
+	      }
+
+	      for (int i = 0; i < model.getRowCount(); i++) {
+	          Object value = model.getValueAt(i, 0);
+
+	          if (value == null || value.toString().trim().isEmpty()) {
+	              String name;
+
+	              do {
+	                  name = "default_name_" + count++;
+	              } while (usedNames.contains(name));
+
+	              model.setValueAt(name, i, 0);
+	              usedNames.add(name);
+	          }
+	      }
+	  }
+
 
       // checkEmpty: Method for checking if a table has empty values
       private boolean checkEmpty(DefaultTableModel table) {
@@ -4409,6 +4479,50 @@ public class Form extends javax.swing.JFrame {
                   }
             }
             return true;
+      }
+      
+      // Returns state variables required by the application or loaded configuration.
+      private List<String> findMissingStateVariables() {
+          List<String> configuredStates = new ArrayList<>();
+
+          for (int i = 0; i < stateModel.getRowCount(); i++) {
+              Object value = stateModel.getValueAt(i, 0);
+
+              if (value != null && !value.toString().trim().isEmpty()) {
+                  configuredStates.add(value.toString().trim());
+              }
+          }
+
+          List<String> missing = new ArrayList<>();
+
+          for (String required : StateCalculator.REQUIRED_STATES) {
+              if (!configuredStates.contains(required) && !missing.contains(required)) {
+                  missing.add(required);
+              }
+          }
+
+          for (String loaded : loadedStateVariables) {
+              if (!configuredStates.contains(loaded) && !missing.contains(loaded)) {
+                  missing.add(loaded);
+              }
+          }
+
+          return missing;
+      }
+
+      // Warns the user when required state variables are missing.
+      private void warnMissingStateVariables() {
+          List<String> missing = findMissingStateVariables();
+
+          if (!missing.isEmpty()) {
+              stateMessageLabel.setVisible(true);
+              stateMessageLabel.setText("Missing required state variables");
+
+              JOptionPane.showMessageDialog(this,
+                      "The following state variables are missing:\n\n" + String.join("\n", missing),
+                      "Missing State Variables",
+                      JOptionPane.WARNING_MESSAGE);
+          }
       }
 
       /*
@@ -4464,13 +4578,18 @@ public class Form extends javax.swing.JFrame {
        */
       private void processDescSubmitButtonActionPerformed() {
             processDescMessageLabel.setVisible(true);
+	        // Apply defaults before validating table entries.
+	        applyDefaultNames(processDescModel);
+	        applyTableDefault(processDescModel, 1, "0");
+	        applyTableDefault(processDescModel, 2, "0");
+	        applyTableDefault(processDescModel, 3, "0");
             int row = processDescModel.getRowCount();
             boolean multiple = true;
             // The deadtime column values (converted into hours) must be a multiple of the
             // process period
             try {
                   for (int i = 0; i < row; i++) {
-                        if (((double) processDescModel.getValueAt(i, 1) * 60) % process != 0) {
+                        if ((Double.parseDouble(processDescModel.getValueAt(i, 1).toString().trim()) * 60) % process != 0) {
                               multiple = false;
                               break;
                         }
@@ -4590,6 +4709,14 @@ public class Form extends javax.swing.JFrame {
        */
       private void inputSubmitButtonActionPerformed() {
             inputMessageLabel.setForeground(Color.black);
+            // Apply defaults before validating input variables.
+            applyDefaultNames(inModel);
+            applyTableDefault(inModel, 2, "0"); // Noise
+            applyTableDefault(inModel, 3, "0"); // MV Lag
+            applyTableDefault(inModel, 4, "100"); // Max
+            applyTableDefault(inModel, 5, "0"); // Min
+            applyTableDefault(inModel, 6, String.valueOf(process)); // Sin Period
+            applyTableDefault(inModel, 7, "0"); // Sin Amplitude
             int row = inModel.getRowCount();
             List<Integer> list = new ArrayList<>();
             // The order values must be ascending
@@ -4852,6 +4979,11 @@ public class Form extends javax.swing.JFrame {
        */
       private void stateSubmitButtonActionPerformed() {
             stateMessageLabel.setVisible(true);
+            // Apply defaults before validating state variables.
+            applyDefaultNames(stateModel);
+            applyTableDefault(stateModel, 2, "0"); // Noise
+            applyTableDefault(stateModel, 3, "100"); // Max
+            applyTableDefault(stateModel, 4, "0"); // Min
             // Applies validation checks
             if (!checkEmpty(stateModel)) {
                   stateMessageLabel.setText("Fields cannot be empty");
@@ -4896,6 +5028,7 @@ public class Form extends javax.swing.JFrame {
                    */
                   processDescSet = true;
                   stateDirty = false;
+                  warnMissingStateVariables();
             }
       }
 
@@ -4947,6 +5080,12 @@ public class Form extends javax.swing.JFrame {
        */
       private void outputSubmitButtonActionPerformed() {
             outputMessageLabel.setVisible(true);
+            // Apply defaults before validating output variables.
+            applyDefaultNames(outModel);
+            applyTableDefault(outModel, 1, "default_description"); // Description
+            applyTableDefault(outModel, 2, "0"); // Noise
+            applyTableDefault(outModel, 3, "1"); // Max
+            applyTableDefault(outModel, 4, "0"); // Min
             // Applies validation checks
             if (!checkEmpty(outModel)) {
                   outputMessageLabel.setText("Fields cannot be empty");
@@ -5180,6 +5319,29 @@ public class Form extends javax.swing.JFrame {
        */
       private void labAddButtonActionPerformed() {
             labMessageLabel.setForeground(Color.BLACK);
+            // Apply defaults when adding a lab variable.
+            String selectedOutput = String.valueOf(outputBox.getSelectedItem());
+
+            if (labWeightField.getText().isBlank()) {
+                boolean hasExistingVariable = false;
+
+                for (int i = 0; i < labModel.getRowCount(); i++) {
+                    if (selectedOutput.equals(String.valueOf(labModel.getValueAt(i, 1)))) {
+                        hasExistingVariable = true;
+                        break;
+                    }
+                }
+
+                if (!hasExistingVariable) {
+                    applyDefault(labWeightField, "100");
+                }
+            }
+
+            int selectedModel = modelBox.getSelectedIndex();
+
+            if (selectedModel == 1 || selectedModel == 2) {
+                applyDefault(labSlopeField, "1");
+            }
             String slope = labSlopeField.getText();
             String asymptote = labAsymptoteField.getText();
             String weight = labWeightField.getText();
@@ -5220,6 +5382,39 @@ public class Form extends javax.swing.JFrame {
        */
       private void labSubmitButtonActionPerformed() {
             labMessageLabel.setForeground(Color.BLACK);
+            // Apply defaults to existing lab configuration rows.
+            for (int i = 0; i < labModel.getRowCount(); i++) {
+                Object modelValue = labModel.getValueAt(i, 7);
+
+                if (modelValue != null) {
+                    String gainModel = modelValue.toString().trim();
+
+                    if (gainModel.equals("1") || gainModel.equals("2")) {
+                        Object slope = labModel.getValueAt(i, 6);
+
+                        if (slope == null || slope.toString().isBlank()) {
+                            labModel.setValueAt("1", i, 6);
+                        }
+                    }
+                }
+
+                Object weight = labModel.getValueAt(i, 3);
+
+                if (weight == null || weight.toString().isBlank()) {
+                    String outputName = String.valueOf(labModel.getValueAt(i, 1));
+                    int variableCount = 0;
+
+                    for (int j = 0; j < labModel.getRowCount(); j++) {
+                        if (outputName.equals(String.valueOf(labModel.getValueAt(j, 1)))) {
+                            variableCount++;
+                        }
+                    }
+
+                    if (variableCount == 1) {
+                        labModel.setValueAt("100", i, 3);
+                    }
+                }
+            }
             boolean ready = true;
             Set<String> availableVariables = new HashSet<>();
             for (int i = 2; i <= input.columnKeySet().size(); i++) {
@@ -5439,6 +5634,40 @@ public class Form extends javax.swing.JFrame {
                 infoLabel.setText("The following variables are missing from inputs and state");
             }
       }
+      
+      // handleGenerationError: Displays an error message and allows the user to
+      // restart or close the application after a failed dataset generation.
+      private void handleGenerationError(Exception error) {
+    	    error.printStackTrace();
+
+    	    generating = false;
+    	    loadBar.setVisible(false);
+    	    progressLabel.setText("Generation failed.");
+
+    	    Object[] options = {"Restart", "Close"};
+
+    	    int choice = JOptionPane.showOptionDialog(
+    	        this,
+    	        "Dataset generation failed:\n" + error
+    	            + "\n\nWould you like to restart or close the application?"
+    	            + "\nUnsaved configuration changes will be lost.",
+    	        "Generation Error",
+    	        JOptionPane.DEFAULT_OPTION,
+    	        JOptionPane.ERROR_MESSAGE,
+    	        null,
+    	        options,
+    	        options[0]
+    	    );
+
+    	    if (choice == 0) {
+    	        Form newForm = new Form();
+    	        newForm.setVisible(true);
+    	        dispose();
+    	    } 
+    	    else {
+    	        System.exit(0);
+    	    }
+    	}
 
       // run: Method that generates the dataset taking in the start time as a
       // parameter
@@ -5454,7 +5683,7 @@ public class Form extends javax.swing.JFrame {
                   // Boolean allows for the doInBackground() status to be checked and String is
                   // the type of the data sent to the process() method
                   SwingWorker<Boolean, String> sw = new SwingWorker<Boolean, String>() {
-
+                	    private Exception generationError;
                         // doInBackground: Method that performs a sequence of actions in a SwingWorker
                         // thread
                         @Override
@@ -5481,10 +5710,8 @@ public class Form extends javax.swing.JFrame {
                                     // Returns true so the get() method can be checked to see if it was successful
                                     return true;
                               } catch (Exception e) {
-                                    progressLabel.setText("Error:" + e);
-                                    dialog("Error: " + e, "Generation Error");
-                                    e.printStackTrace();
-                                    return false;
+                            	    generationError = e;
+                            	    return false;
                               }
                         }
 
@@ -5501,41 +5728,47 @@ public class Form extends javax.swing.JFrame {
                         // done: Method that performs actions once doInBackground() completes
                         @Override
                         protected void done() {
-                              // The contents of the try block were not used from the SwingWorker tutorial
-                              try {
-                                    // Only runs if successful
-                                    if (get()) {
-                                          /*
-                                           * Below code was adapted from this tutorial (under Method 2 :- Using the
-                                           * LocalTime and ChronoUnit class):
-                                           * https://www.geeksforgeeks.org/java-program-to-calculate-difference-between-
-                                           * two-time-periods/
-                                           * Some variables and text in String were changed
-                                           */
-                                          LocalTime finish = LocalTime.now();
-                                          long hours = ChronoUnit.HOURS.between(start, finish);
-                                          long minutes = ChronoUnit.MINUTES.between(start, finish) % 60;
-                                          long seconds = ChronoUnit.SECONDS.between(start, finish) % 60;
-                                          String time = hours + " hours " + minutes + " minutes " + seconds
-                                                      + " seconds";
-                                          // End of code reference (Time difference reference)
-                                          progressLabel.setText("Dataset generated in the /data folder");
-                                          timeLabel.setVisible(true);
-                                          timeLabel.setText("Time taken: " + time);
-                                          genButton.setVisible(true);
-                                          generating = false;
-                                          downloadButton.setVisible(true);
-                                    }
-                                    // The catch block was condensed from the SwingWorker tutorial and additional
-                                    // lines were added by myself
-                              } catch (InterruptedException | ExecutionException e) {
-                                    progressLabel.setText("Error: " + e);
-                                    dialog("Error: " + e, "Generation Error");
-                                    e.printStackTrace();
-                                    loadBar.setVisible(false);
+                            try {
+                                if (get()) {
+                                    LocalTime finish = LocalTime.now();
+
+                                    long hours = ChronoUnit.HOURS.between(start, finish);
+                                    long minutes = ChronoUnit.MINUTES.between(start, finish) % 60;
+                                    long seconds = ChronoUnit.SECONDS.between(start, finish) % 60;
+
+                                    String time = hours + " hours "
+                                            + minutes + " minutes "
+                                            + seconds + " seconds";
+
+                                    progressLabel.setText("Dataset generated in the /data folder");
+                                    timeLabel.setVisible(true);
+                                    timeLabel.setText("Time taken: " + time);
+
                                     genButton.setVisible(true);
+                                    generating = false;
                                     downloadButton.setVisible(true);
-                              }
+
+                                } else {
+                                    // Generation returned false due to an error.
+                                    handleGenerationError(
+                                        generationError != null
+                                            ? generationError
+                                            : new Exception("Dataset generation failed.")
+                                    );
+                                }
+
+                            } catch (InterruptedException e) {
+                                Thread.currentThread().interrupt();
+                                handleGenerationError(e);
+
+                            } catch (ExecutionException e) {
+                                Throwable cause = e.getCause();
+                                handleGenerationError(
+                                    cause instanceof Exception
+                                        ? (Exception) cause
+                                        : new Exception("Generation failed.", cause)
+                                );
+                            }
                         }
 
                   };
